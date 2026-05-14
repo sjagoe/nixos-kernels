@@ -40,7 +40,7 @@
         let
           pkgs = import nixpkgs { inherit system; };
           versions = builtins.attrNames hashes;
-          nameKernel = version: "linux_${builtins.replaceStrings ["."] ["_"] version}";
+          nameKernel = version: "linux_${builtins.replaceStrings ["."] ["_"] (pkgs.lib.versions.majorMinor version)}";
           hash = version: hashes."${version}";
         in
           builtins.listToAttrs
