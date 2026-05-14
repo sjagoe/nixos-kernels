@@ -31,9 +31,10 @@ jobs:
           separator="matrix-$RANDOM"
           {
             echo "matrix<<$separator"
-            echo "$matrix" | jq -ec .
+            echo "$matrix" | jq -e .
             echo "$separator"
           } >> "$GITHUB_OUTPUT"
+          cat "$GITHUB_OUTPUT"
 
   build:
     name: Build kernel
