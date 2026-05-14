@@ -33,7 +33,7 @@ jobs:
             echo "matrix<<$separator"
             echo "$matrix" | jq -ec .
             echo "$separator"
-          } >> "$FORGEJO_OUTPUT"
+          } >> "$GITHUB_OUTPUT"
 
   build:
     name: Build kernel
