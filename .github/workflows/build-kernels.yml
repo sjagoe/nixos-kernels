@@ -40,7 +40,8 @@ jobs:
     name: Build kernel
     needs: matrix
     strategy:
-      matrix: ${{ fromJson(needs.matrix.outputs.matrix) }}
+      matrix:
+        include: ${{ fromJson(needs.matrix.outputs.matrix) }}
     runs-on: "ubuntu-24.04${{ matrix.plarform-suffix }}"
     steps:
       - uses: cachix/install-nix-action@v31
