@@ -42,7 +42,7 @@ jobs:
     strategy:
       matrix:
         include: ${{ fromJson(needs.matrix.outputs.matrix) }}
-    runs-on: "ubuntu-24.04${{ matrix.plarform-suffix }}"
+    runs-on: "ubuntu-24.04${{ matrix.platform-suffix }}"
     steps:
       - uses: cachix/install-nix-action@v31
         with:
