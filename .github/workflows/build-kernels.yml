@@ -1,0 +1,54 @@
+name: Build kernels
+
+on:
+  workflow_dispatch:
+
+jobs:
+  matrix:
+    name: Generate matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - uses: cachix/install-nix-action@v31
+        with:
+          nix_path: nixpkgs=channel:nixos-25.11
+      - uses: actions/checkout@v6
+      - name: Build matrix
+        id: matrix
+        env:
+          RUNNER_LABEL: "ubuntu-24.04"
+          SUFFIX: |
+            {
+                "aarch64-linux": "-arm",
+                "x86_64-linux": ""
+            }
+        run: |
+          matrix="$(
+            nix eval --json .#packages | \
+              jq -e --argjson suffix "$SUFFIX" '[. | to_entries | .[] | .key as $key | foreach (.value | keys | .[]) as $package (null; {"platform": $key, "platform-suffix": "\($suffix[$key])", package: $package})]'
+          )"
+          separator="matrix-$RANDOM"
+          {
+            echo "matrix<<$separator"
+            echo "$matrix" | jq -ec .
+            echo "$separator"
+          } >> "$FORGEJO_OUTPUT"
+
+  build:
+    name: Build kernel
+    needs: matrix
+    strategy:
+      matrix: ${{ fromJson(needs.matrix.outputs.matrix) }}
+    runs-on: "ubuntu-24.04${{ matrix.plarform-suffix }}"
+    steps:
+      - uses: cachix/install-nix-action@v31
+        with:
+          nix_path: nixpkgs=channel:nixos-25.11
+      - uses: actions/checkout@v6
+      - name: Build
+        env:
+          PACKAGE: ${{ matrix.package }}
+          PLATFORM: ${{ matrix.platform }}
+        run: |
+          nix build ".#packages.${PLATFORM}.${PACKAGE}"
