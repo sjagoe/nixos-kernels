@@ -53,4 +53,4 @@ jobs:
           PACKAGE: ${{ matrix.package }}
           PLATFORM: ${{ matrix.platform }}
         run: |
-          nix build ".#packages.${PLATFORM}.${PACKAGE}"
+          nix build ".#packages.${PLATFORM}.${PACKAGE}" --print-out-paths --print-build-logs
