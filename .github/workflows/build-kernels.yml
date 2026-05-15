@@ -28,7 +28,7 @@ jobs:
             nix eval --json .#packages | \
               jq -e --argjson runson "$RUNS_ON" '[. | to_entries | .[] | .key as $key | foreach (.value | keys | .[]) as $package (null; {"platform": $key, "runs-on": "\($runson[$key])", package: $package})]'
           )"
-          matrix="$(jq -n '{"platform": "x86_64-linux", "runs-on": "ubuntu-24.04", "package": "linux_7_0"}]')"
+          matrix="$(jq -n '[{"platform": "x86_64-linux", "runs-on": "ubuntu-24.04", "package": "linux_7_0"}]')"
           separator="matrix-$RANDOM"
           {
             echo "matrix<<$separator"
