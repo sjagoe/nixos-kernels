@@ -20,13 +20,13 @@ jobs:
           RUNNER_LABEL: "ubuntu-24.04"
           SUFFIX: |
             {
-                "aarch64-linux": "-arm",
-                "x86_64-linux": ""
+                "aarch64-linux": "ubuntu-24.04-arm",
+                "x86_64-linux": "ubuntu-24.04"
             }
         run: |
           matrix="$(
             nix eval --json .#packages | \
-              jq -e --argjson suffix "$SUFFIX" '[. | to_entries | .[] | .key as $key | foreach (.value | keys | .[]) as $package (null; {"platform": $key, "platform-suffix": "\($suffix[$key])", package: $package})]'
+              jq -e --argjson suffix "$SUFFIX" '[. | to_entries | .[] | .key as $key | foreach (.value | keys | .[]) as $package (null; {"platform": $key, "runs-on": "\($runs-on[$key])", package: $package})]'
           )"
           separator="matrix-$RANDOM"
           {
@@ -42,7 +42,7 @@ jobs:
     strategy:
       matrix:
         include: ${{ fromJson(needs.matrix.outputs.matrix) }}
-    runs-on: "ubuntu-24.04${{ matrix.platform-suffix }}"
+    runs-on: "${{ matrix.runs-on }}"
     steps:
       - uses: cachix/install-nix-action@v31
         with:
