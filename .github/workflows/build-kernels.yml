@@ -55,8 +55,6 @@ jobs:
           PACKAGE: ${{ matrix.package }}
           PLATFORM: ${{ matrix.platform }}
         run: |
-          (while true; do sleep 30; df -h; echo; echo; ps -o user,pid,pcpu,rss,size,cmd -G 30000; echo; echo; done) &
-
           OUTPUT_NAMES="$(nix eval --json ".#packages.${PLATFORM}.${PACKAGE}.outputs" | jq -r '.[]')"
           mapfile -t OUTPUTS <<<"$OUTPUT_NAMES"
           TARGETS=()
@@ -67,8 +65,4 @@ jobs:
             )
           done
           echo "Building ${TARGETS[*]}"
-          df -h
           nix build "${TARGETS[@]}" --print-out-paths --print-build-logs
-
-          kill %1
-          wait
