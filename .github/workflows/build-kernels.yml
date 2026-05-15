@@ -66,21 +66,21 @@ jobs:
             )
           done
           echo "Building ${TARGETS[*]}"
-          BUILDS="$(nix build "${TARGETS[@]}" --print-out-paths --print-build-logs)"
+          # BUILDS="$(nix build "${TARGETS[@]}" --print-out-paths --print-build-logs)"
 
-          separator="builds-$RANDOM"
-          {
-            echo builds<<"$separator"
-            echo "$BUILDS"
-            echo "$separator"
-          } >> "$GITHUB_OUTPUT"
+          # separator="builds-$RANDOM"
+          # {
+          #   echo builds<<"$separator"
+          #   echo "$BUILDS"
+          #   echo "$separator"
+          # } >> "$GITHUB_OUTPUT"
 
       - name: Push packages to cache
-        env:
-          BUILDS: ${{ steps.build.outputs.builds }}
+        # env:
+        #   BUILDS: ${{ steps.build.outputs.builds }}
         run: |
-          mapfile -t BUILD_PATHS <<<"$BUILDS"
-          for item in "${BUILD_PATHS[@]}"; do
-            echo "Caching $item"
-          done
+          # mapfile -t BUILD_PATHS <<<"$BUILDS"
+          # for item in "${BUILD_PATHS[@]}"; do
+          #   echo "Caching $item"
+          # done
           nix run nixpkgs#attic-client -- --help
