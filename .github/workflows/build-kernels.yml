@@ -55,4 +55,14 @@ jobs:
           PACKAGE: ${{ matrix.package }}
           PLATFORM: ${{ matrix.platform }}
         run: |
-          nix build ".#packages.${PLATFORM}.${PACKAGE}" --print-out-paths --print-build-logs
+          OUTPUT_NAMES="$(nix eval --json ".#packages.${PLATFORM}.${PACKAGE}.outputs" | jq -r '.[]')"
+          mapfile -t OUTPUTS <<<"$OUTPUT_NAMES"
+          TARGETS=()
+          for output in "${OUTPUTS[@]}"; do
+            TARGETS=(
+              "${TARGETS[@]}"
+              ".#packages.${PLATFORM}.${PACKAGE}.${output}"
+            )
+          done
+          echo "Building ${TARGETS[*]}"
+          nix build "${TARGETS[@]}" --print-out-paths --print-build-logs
