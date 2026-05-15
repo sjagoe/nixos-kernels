@@ -75,6 +75,28 @@ jobs:
           #   echo "$separator"
           # } >> "$GITHUB_OUTPUT"
 
+      - name: Configure wg
+        env:
+          WG_REMOTE: ${{ secrets.WG_REMOTE }}
+          WG_PRIVATE: ${{ secrets.WG_PRIVATE }}
+          WG_REMOTE_PUBLIC: ${{ secrets.WG_REMOTE_PUBLIC }}
+          WG_REMOTE_IP: ${{ secrets.WG_REMOTE_IP }}
+          WG_IP: ${{ secrets.WG_IP }}
+        run: |
+          sudo apt install wireguard
+          echo "$WG_PRIVATE}" > privatekey
+          sudo ip link add dev wg0 type wireguard
+          sudo ip address add dev wg0 "${WG_IP}" peer "${WG_REMOTE_IP}"
+          sudo wg set wg0 listen-port 51820 \
+            private-key privatekey \
+            peer "${WG_REMOTE_PUBLIC}" \
+            allowed-ips "${WG_REMOTE_IP}/32" endpoint "${WG_REMOTE}"
+          sudo ip link set up dev wg0
+
+          echo "${WG_REMOTE_IP} attic.jagoe.eu" | sudo tee -a /etc/hosts
+
+          curl -v https://attic.jagoe.eu
+
       - name: Push packages to cache
         # env:
         #   BUILDS: ${{ steps.build.outputs.builds }}
