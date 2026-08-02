@@ -36,36 +36,10 @@ jobs:
       - name: Checkout
         uses: https://data.forgejo.org/actions/checkout@v4
 
-      - name: Build
-        id: build
-        env:
-          BUILD: ${{ matrix.build }}
-        run: |
-          OUTPUT_NAMES="$(nix eval --json ".#${BUILD}.outputs" | jq -r '.[]')"
-          mapfile -t OUTPUTS <<<"$OUTPUT_NAMES"
-          TARGETS=()
-          for output in "${OUTPUTS[@]}"; do
-            TARGETS=(
-              "${TARGETS[@]}"
-              ".#${BUILD}.${output}"
-            )
-          done
-          echo "Building ${TARGETS[*]}"
-          BUILDS="$(nix build "${TARGETS[@]}" --print-out-paths --print-build-logs)"
-
-          separator="builds-$RANDOM"
-          {
-            echo "builds<<$separator"
-            echo "$BUILDS"
-            echo "$separator"
-          } >> "$FORGEJO_OUTPUT"
-          cat "$FORGEJO_OUTPUT"
-
-      - name: Push packages to cache
-        env:
-          BUILDS: ${{ steps.build.outputs.builds }}
-        run: |
-          mapfile -t BUILD_PATHS <<<"$BUILDS"
-          for item in "${BUILD_PATHS[@]}"; do
-            echo "Caching $item"
-          done
+      - name: Build and cache
+        uses: https://git.jagoe.eu/actions/build@v1.0.2
+        with:
+          attic-cache-key: ${{ secrets.ATTIC_CACHE_KEY }}
+          build-target: ".#${{ matrix.build }}"
+          github-token: ${{ secrets.GH_APP_AUTH_TOKEN }}
+          deploy-key-content: ${{ secrets.GIT_PRIVATE_READ_KEY }}
