@@ -59,6 +59,7 @@ jobs:
             echo "$BUILDS"
             echo "$separator"
           } >> "$GITHUB_OUTPUT"
+          cat "$GITHUB_OUTPUT"
 
       - name: Push packages to cache
         env:
