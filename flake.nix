@@ -19,6 +19,6 @@
           systems);
     in
       {
-        packages = nixpkgs.lib.traceVal mainlinePackages;
+        packages = mainlinePackages;
       };
 }
