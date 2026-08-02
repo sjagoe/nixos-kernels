@@ -8,11 +8,9 @@
   outputs = { self, nixpkgs }:
     let
       systems = [ "x86_64-linux" "aarch64-linux" ];
-      kernels-json = builtins.fromJSON (builtins.readFile ./kernels.json);
-      availableReleases = kernels-json.versions;
       kernelVersions =
         let
-          kernelHashes = kernels-json.hashes;
+          kernelHashes = builtins.fromJSON (builtins.readFile ./kernels.json);
         in
           builtins.listToAttrs
             (map (system: { name = system; value = kernelHashes; }) systems);
@@ -42,40 +40,17 @@
         let
           pkgs = import nixpkgs { inherit system; };
           inherit (pkgs) lib;
-
-          versionCmp = a: b: (builtins.compareVersions a b) > 0;
-          selectVersions = kver:
-            let
-              re = "^${lib.strings.escapeRegex kver}(\..*|$)";
-            in
-              builtins.sort versionCmp
-                (builtins.filter (i: (builtins.match re i) != null)
-                  (builtins.attrNames hashes));
-
-          latestVersionFor = kver:
-            builtins.elemAt (selectVersions kver) 0;
-
           versions = builtins.attrNames hashes;
-          nameKernel = version: "linux_${builtins.replaceStrings ["."] ["_"] version}";
+          nameKernel = version: "linux_${builtins.replaceStrings ["."] ["_"] (lib.versions.majorMinor version)}";
           hash = version: hashes."${version}";
           kernelsByVersion = builtins.listToAttrs
             (builtins.map
               (version: { name = version; value = overrideKernel pkgs version (hash version); })
               versions);
-
-          latestKernelFor = release:
-            let
-              version = latestVersionFor release;
-            in
-              { name = nameKernel "${release}_latest"; value = kernelsByVersion.${version}; };
-
-          latest = builtins.map
-            (release: latestKernelFor release)
-            availableReleases;
         in
           (lib.mapAttrs'
             (version: package: { name = nameKernel version; value = package; })
-            kernelsByVersion) // (builtins.listToAttrs latest);
+            kernelsByVersion);
     in
       {
         packages = builtins.mapAttrs
