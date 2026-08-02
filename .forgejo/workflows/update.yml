@@ -55,7 +55,7 @@ jobs:
         uses: https://git.jagoe.eu/actions/pull-request@v1.0.0
         with:
           update-branch: ${{ env.UPDATE_BRANCH }}
-          commit-message: "Add kernel hashes"
+          commit-message: "Update kernel hashes"
           files: |
             kernels.json
           forgejo-token: ${{ secrets.CREATE_PR_TOKEN }}
