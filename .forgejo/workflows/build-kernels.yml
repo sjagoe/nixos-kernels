@@ -6,7 +6,7 @@ on:
 jobs:
   matrix:
     name: Generate matrix
-    runs-on: ubuntu-latest
+    runs-on: [nix-deploy, x86_64-linux]
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
@@ -31,7 +31,7 @@ jobs:
     strategy:
       matrix:
         build: ${{ fromJson(needs.matrix.outputs.matrix) }}
-    runs-on: nix-build
+    runs-on: [nix-build, x86_64-linux]
     steps:
       - name: Checkout
         uses: https://data.forgejo.org/actions/checkout@v4
