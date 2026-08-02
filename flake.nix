@@ -9,16 +9,32 @@
     let
       systems = [ "x86_64-linux" "aarch64-linux" ];
       kernelHashes = builtins.fromJSON (builtins.readFile ./kernels.json);
-      mainline = import ./mainline;
 
+      mainline = import ./mainline;
       mainlinePackages' =
         mainline.generatePackages "x86_64-linux" kernelHashes nixpkgs.legacyPackages.x86_64-linux;
       mainlinePackages = builtins.listToAttrs
         (map
           (system: { name = system; value = mainline.generatePackages system kernelHashes nixpkgs.legacyPackages.${system}; })
           systems);
+
+      surfaceKernelRelease = "6.18";
+      surfaceKernelVersion =
+        builtins.elemAt
+          (builtins.filter
+            (version: (builtins.match "^${nixpkgs.lib.escapeRegex surfaceKernelRelease}\.[[:digit:]]+" version) != null)
+            (builtins.attrNames kernelHashes))
+          0;
+
+      surfacePackages = {
+        x86_64-linux = import ./surface-kernel {
+          pkgs = nixpkgs.legacyPackages.x86_64-linux;
+          version = surfaceKernelVersion;
+          hash = kernelHashes.${surfaceKernelVersion};
+        };
+      };
     in
       {
-        packages = mainlinePackages;
+        packages = nixpkgs.lib.attrsets.recursiveUpdate mainlinePackages surfacePackages;
       };
 }
