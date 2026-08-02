@@ -30,6 +30,12 @@ jobs:
           ref: ${{ steps.base.outputs.ref }}
           token: ${{ secrets.CREATE_PR_TOKEN }}
 
+      - name: Configure nix
+        id: configure-nix
+        uses: https://git.jagoe.eu/actions/configure-nix@v1.0.0
+        with:
+          github-token: ${{ secrets.GH_APP_AUTH_TOKEN }}
+
       - name: Prepare
         id: prepare
         uses: https://git.jagoe.eu/actions/prepare@v1.0.0
