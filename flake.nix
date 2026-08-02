@@ -11,11 +11,18 @@
       kernelHashes = (builtins.fromJSON (builtins.readFile ./kernels.json)).hashes;
 
       mainline = import ./mainline;
-      mainlinePackages' =
-        mainline.generatePackages "x86_64-linux" kernelHashes nixpkgs.legacyPackages.x86_64-linux;
       mainlinePackages = builtins.listToAttrs
         (map
-          (system: { name = system; value = mainline.generatePackages system kernelHashes nixpkgs.legacyPackages.${system}; })
+          (system:
+            let
+              pkgs = import nixpkgs {
+                inherit system;
+                config.allowUnfreePredicate = pkg: builtins.elem (nixpkgs.lib.getName pkg) [
+                  "nvidia-x11"
+                ];
+              };
+            in
+            { name = system; value = mainline.generatePackages system kernelHashes pkgs; })
           systems);
 
       surfaceKernelRelease = "6.18";
