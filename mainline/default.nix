@@ -25,11 +25,11 @@ in
     let
       inherit (pkgs) lib;
       versions = builtins.attrNames hashes;
-      nameKernel = version: "linux_${builtins.replaceStrings ["."] ["_"] (lib.versions.majorMinor version)}";
+      nameKernel = version: "linuxPackages_${builtins.replaceStrings ["."] ["_"] (lib.versions.majorMinor version)}";
       hash = version: hashes."${version}";
       kernelsByVersion = builtins.listToAttrs
         (builtins.map
-          (version: { name = version; value = overrideKernel pkgs version (hash version); })
+          (version: { name = version; value = pkgs.linuxPackagesFor (overrideKernel pkgs version (hash version)); })
           versions);
     in
       (lib.mapAttrs'
