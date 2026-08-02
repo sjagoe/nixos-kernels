@@ -62,7 +62,7 @@ for version in "${VERSIONS[@]}"; do
         hash="$(nix hash convert --hash-algo sha256 --from nix32 "$hash")"
 
         kernels="$(echo "$kernels" | jq -e --arg oldrelease "${version//\./\\.}" \
-          '.hashes = (.hashes | to_entries | [.[] | select(.key | test("^\($oldrelease)\\." | not))] | from_entries)')"
+          '.hashes = (.hashes | to_entries | [.[] | select(.key | test("^\($oldrelease)\\.") | not)] | from_entries)')"
         kernels="$(echo "$kernels" | jq -e --arg version "$full_version" --arg hash "$hash" '.hashes[$version] = $hash')"
     fi
 done
