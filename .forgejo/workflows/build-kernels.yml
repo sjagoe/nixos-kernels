@@ -56,7 +56,7 @@ jobs:
           echo "$BUILDS"
 
           separator="builds-$RANDOM"
-          echo builds<<"$separator"
+          echo builds $separator
           echo "$BUILDS"
           echo "$separator"
 
