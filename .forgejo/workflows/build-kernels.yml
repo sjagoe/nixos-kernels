@@ -56,15 +56,18 @@ jobs:
           echo "$BUILDS"
 
           separator="builds-$RANDOM"
-          echo builds $separator
-          echo "$BUILDS"
-          echo "$separator"
+          {
+            echo "builds<<$separator"
+            echo "$BUILDS"
+            echo "$separator"
+          } >> "$FORGEJO_OUTPUT"
+          cat "$FORGEJO_OUTPUT"
 
-      # - name: Push packages to cache
-      #   env:
-      #     BUILDS: ${{ steps.build.outputs.builds }}
-      #   run: |
-      #     mapfile -t BUILD_PATHS <<<"$BUILDS"
-      #     for item in "${BUILD_PATHS[@]}"; do
-      #       echo "Caching $item"
-      #     done
+      - name: Push packages to cache
+        env:
+          BUILDS: ${{ steps.build.outputs.builds }}
+        run: |
+          mapfile -t BUILD_PATHS <<<"$BUILDS"
+          for item in "${BUILD_PATHS[@]}"; do
+            echo "Caching $item"
+          done
