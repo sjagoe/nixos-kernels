@@ -35,10 +35,8 @@ let
         "url"
         "sha256"
       ];
-      linuxPackage = buildLinux args';
-      linuxPackages' = recurseIntoAttrs (linuxPackagesFor linuxPackage);
     in
-      linuxPackages';
+      buildLinux args';
 
   surfacePatches =
     {

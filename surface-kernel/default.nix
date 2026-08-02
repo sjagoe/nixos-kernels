@@ -35,15 +35,15 @@ let
     patchFn = ./kernel/${kernelRelease'}/patches.nix;
     patchSrc = linux-surface + "/patches/${kernelRelease'}";
   };
-  kernelPackages = linuxPackage {
+  kernel = linuxPackage {
     inherit kernelPatches;
     inherit version;
     sha256 = hash;
     ignoreConfigErrors = true;
   };
 
-  kernelName = "linuxPackagesSurface_${lib.strings.replaceStrings ["."] ["_"] kernelRelease'}";
+  kernelName = "linux-surface_${lib.strings.replaceStrings ["."] ["_"] kernelRelease'}";
 in
 {
-  ${kernelName} = kernelPackages;
+  ${kernelName} = kernel;
 }
