@@ -8,7 +8,7 @@
   outputs = { self, nixpkgs }:
     let
       systems = [ "x86_64-linux" "aarch64-linux" ];
-      kernelHashes = builtins.fromJSON (builtins.readFile ./kernels.json);
+      kernelHashes = (builtins.fromJSON (builtins.readFile ./kernels.json)).hashes;
 
       mainline = import ./mainline;
       mainlinePackages' =
