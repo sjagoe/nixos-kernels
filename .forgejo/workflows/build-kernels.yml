@@ -53,8 +53,6 @@ jobs:
           echo "Building ${TARGETS[*]}"
           BUILDS="$(nix build "${TARGETS[@]}" --print-out-paths --print-build-logs)"
 
-          echo "$BUILDS"
-
           separator="builds-$RANDOM"
           {
             echo "builds<<$separator"
