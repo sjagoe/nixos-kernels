@@ -6,7 +6,7 @@ on:
 jobs:
   matrix:
     name: Generate matrix
-    runs-on: [nix-deploy, x86_64-linux]
+    runs-on: [nix-flake-check, x86_64-linux]
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
