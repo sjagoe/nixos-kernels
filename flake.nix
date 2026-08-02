@@ -33,8 +33,11 @@
           hash = kernelHashes.${surfaceKernelVersion};
         };
       };
+
+      packages = nixpkgs.lib.attrsets.recursiveUpdate mainlinePackages surfacePackages;
     in
       {
-        packages = nixpkgs.lib.attrsets.recursiveUpdate mainlinePackages surfacePackages;
+        inherit packages;
+        ci.build = nixpkgs.lib.mapAttrsToList (name: pkg: "packages.x86_64-linux.${name}") packages.x86_64-linux;
       };
 }
