@@ -47,6 +47,6 @@
     in
       {
         inherit packages;
-        ci.build = nixpkgs.lib.mapAttrsToList (name: pkg: "packages.x86_64-linux.${name}") packages.x86_64-linux;
+        ci.build = nixpkgs.lib.mapAttrsToList (name: pkg: ".#packages.x86_64-linux.${name}") packages.x86_64-linux;
       };
 }
