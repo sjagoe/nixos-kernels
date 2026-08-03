@@ -1,0 +1,83 @@
+name: Update
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "15 */3 * * *"
+
+jobs:
+  update-kernels:
+    name: Update kernels
+    runs-on: ubuntu-latest
+    env:
+      UPDATE_BRANCH: ci/update/kernels
+    steps:
+      - name: Determine base
+        id: base
+        shell: bash
+        run: |
+          {
+              if [[ "$GITHUB_HEAD_REF" == "" ]]; then
+                  echo "ref=$GITHUB_REF_NAME"
+              else
+                  echo "ref=$GITHUB_HEAD_REF"
+              fi
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ steps.base.outputs.ref }}
+          token: ${{ secrets.CREATE_PR_TOKEN }}
+
+      - uses: cachix/install-nix-action@v31
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+
+      - name: Prepare
+        id: prepare
+        uses: https://git.jagoe.eu/actions/prepare@v1.0.0
+        with:
+          update-branch: ${{ env.UPDATE_BRANCH }}
+          base-ref: ${{ steps.base.outputs.ref }}
+
+      - name: Checkout update branch
+        shell: bash
+        env:
+          REF: ${{ steps.base.outputs.ref }}
+          UPDATE_BRANCH: ${{ env.UPDATE_BRANCH }}
+        run: |
+          git config user.email "nixos-kernels-robot@fake-email"
+          git config user.name "Github Actions"
+          git switch --create "$UPDATE_BRANCH" --track "origin/$UPDATE_BRANCH" ||
+              git switch --create "$UPDATE_BRANCH"
+          if ! git rebase "origin/$REF"; then
+              git rebase --abort
+              git reset --hard "origin/$REF"
+          fi
+
+      - name: Update kernels
+        id: update
+        env:
+          GIT_REF: ${{ steps.base.outputs.ref }}
+        run: |
+          bash ./update-kernels.sh
+
+      - name: Push and create PR
+        shell: bash
+        env:
+          BUILD_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          AUTHOR: "nixos-kernels-robot <nixos-kernels-robot@fake-email>"
+          UPDATE_BRANCH: ${{ env.UPDATE_BRANCH }}
+          MESSAGE: "Update kernel hashes"
+          DESCRIPTION: ""
+          FILES_LIST: |
+            kernels.json
+          CREATE_PR_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
+        run: |
+          mapfile -t FILES < <(echo "$FILES_LIST" | grep -v '^$')
+          for filename in "${FILES[@]}"; do
+            echo "$filename"
+          done
+          bash ".github/scripts/create-pr.sh" "$MESSAGE" "$DESCRIPTION" "${FILES[@]}"
