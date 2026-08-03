@@ -2,7 +2,7 @@
   description = "NixOS Kernels from mainline kernel.org";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
   };
 
   outputs = { self, nixpkgs }:
@@ -43,13 +43,16 @@
         if (arch == "aarch64-linux") then
           "ubuntu-latest-arm" else
             "ubuntu-latest";
+
+      lock = builtins.fromJSON (builtins.readFile ./flake.lock);
+      nixos-release = lock.nodes.nixpkgs.original.ref;
     in
       {
         inherit packages;
         ci.build =
           lib.flatten (map
             ({ runs-on, arch, pkgs }:
-              map (pkg: { inherit runs-on; build = ".#packages.${arch}.${pkg}"; }) (builtins.attrNames pkgs))
+              map (pkg: { inherit runs-on nixos-release; build = ".#packages.${arch}.${pkg}"; }) (builtins.attrNames pkgs))
             (lib.mapAttrsToList
               (arch: pkgs: { runs-on = runner-label arch; inherit arch pkgs; })
               packages));

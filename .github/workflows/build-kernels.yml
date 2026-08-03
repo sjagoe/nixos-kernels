@@ -18,7 +18,7 @@ jobs:
 
       - uses: cachix/install-nix-action@v25
         with:
-          nix_path: nixpkgs=channel:nixos-26.05
+          nix_path: nixpkgs=channel:nixos-unstable
 
       - name: Build matrix
         id: matrix
@@ -45,7 +45,7 @@ jobs:
 
       - uses: cachix/install-nix-action@v25
         with:
-          nix_path: nixpkgs=channel:nixos-26.05
+          nix_path: nixpkgs=channel:${{ matrix.nixos-release }}
 
       - uses: cachix/cachix-action@v17
         with:
