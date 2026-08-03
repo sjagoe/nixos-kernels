@@ -2,7 +2,7 @@
   description = "NixOS Kernels from mainline kernel.org";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-26.05";
+    nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
   };
 
   outputs = { self, nixpkgs }:
@@ -16,14 +16,7 @@
         (map
           (system:
             let
-              pkgs = import nixpkgs {
-                inherit system;
-                config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
-                  "nvidia-x11"
-                  "nvidia-kernel-modules"
-                  "nvidia-settings"
-                ];
-              };
+              pkgs = nixpkgs.legacyPackages.${system};
             in
             { name = system; value = mainline.generatePackages system kernelHashes pkgs; })
           systems);
