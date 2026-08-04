@@ -51,8 +51,6 @@ jobs:
           ^bison$
           ^build-essential$
           ^buildah$
-          ^containerd\.io$
-          ^docker-ce.*
           ^gortran.*
           ^clang.*
           ^firefox$
@@ -77,7 +75,7 @@ jobs:
           mapfile -t REMOVE < <(apt-mark showmanual | grep --file removepatterns)
           sudo apt-get remove --purge --autoremove "${REMOVE[@]}"
 
-          sudo rm -rf /usr/local/julia1* /opt/hostedtoolcache/Py{thon,Py} /opt/hostedtoolcache/go /usr/local/lib/android /usr/share/dotnet /usr/share/swift /var/lib/containerd /usr/local/share/powershell || true
+          sudo rm -rf /usr/local/julia1* /opt/hostedtoolcache/Py{thon,Py} /opt/hostedtoolcache/go /usr/local/lib/android /usr/share/dotnet /usr/share/swift /usr/local/share/powershell || true
 
           df -h
 
