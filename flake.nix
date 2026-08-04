@@ -39,10 +39,12 @@
 
       packages = lib.attrsets.recursiveUpdate mainlinePackages surfacePackages;
 
-      runner-label = arch:
+      runner-size = "8-vcpu";
+      runner-arch = arch:
         if (arch == "aarch64-linux") then
-          "avrea-ubuntu-latest-arm-4-vcpu" else
-            "avrea-ubuntu-latest-4-vcpu";
+          "arm-" else "";
+      runner-label = arch:
+        "avrea-ubuntu-latest-${runner-arch arch}${runner-size}";
 
       lock = builtins.fromJSON (builtins.readFile ./flake.lock);
       nixos-release = lock.nodes.nixpkgs.original.ref;
