@@ -3,7 +3,21 @@
 cat <<'EOF'
 # NixOS mainline kernels
 
-Kernels built from kernel.org sources
+Kernels built from kernel.org sources.
+
+## Usage
+
+Binaries are available from the `nixos-kernels` cachix.org cache.
+
+Add the follwing to your `nix.conf`:
+
+```
+extra-substituters = https://nixos-kernels.cachix.org
+extra-trusted-public-keys = nixos-kernels.cachix.org-1:RIMUFtH7hjB2skf7CYu5yy+4zsd3uEVsR+2OprRtKdQ=
+```
+
+
+## Included kernels
 
 This project provides the following kernels:
 
