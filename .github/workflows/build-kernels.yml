@@ -20,16 +20,33 @@ jobs:
         run: |
           df -h
           cat <<'EOF' > removepatterns
-          ^ant-optional$
+          ^ant.*
           ^apache2$
+          ^aria2$
+          ^autoconf$
+          ^automake$
+          ^bison$
+          ^brotli$
           ^build-essential$
+          ^buildah$
+          ^containerd\.io$
+          ^docker-ce.*
           ^gortran.*
           ^clang.*
           ^firefox$
+          ^flex$
           ^g++.*
+          ^gcc$
           ^google-chrome-stable$
           ^google-cloud-cli$
+          ^kubectl$
+          ^lldb.*
+          ^libmysql.*
+          ^libpq.*
           ^microsoft-edge-stable$
+          ^mysql.*
+          ^nginx$
+          ^otelcol.*
           ^packages-microsoft-prod$
           ^php.*
           ^postgresql.*
