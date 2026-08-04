@@ -13,15 +13,44 @@ extra-substituters = https://nixos-kernels.cachix.org
 extra-trusted-public-keys = nixos-kernels.cachix.org-1:RIMUFtH7hjB2skf7CYu5yy+4zsd3uEVsR+2OprRtKdQ=
 ```
 
+Add this repository to your flake inputs
+
+```
+{
+  ...
+  inputs = {
+    ...
+    nixos-kernels.url = "github:sjagoe/nixos-kernels";
+    nixos-kernels.inputs.nixpkgs.follows = "nixpkgs";
+    ...
+  };
+
+  outputs = { ... }@inputs: {
+    ...
+    nixosConfigurations.hosts.hostname.specialArgs = { inherit inputs; };
+  };
+}
+```
+
+And in your host configuration, set the appropriate kernel packages:
+
+```
+{ config, pkgs, lib, inputs, ... }:
+
+{
+  config.boot.kernelPackages = pkgs.linuxPackagesFor inputs.nixos-kernels.packages.${pkgs.stdenv.hostPlatform.system}.linux_7_1;
+}
+```
+
 
 ## Included kernels
 
 This project provides the following kernels:
 
-| arch | version | description | attribute |
-|------|---------|-------------|-----------|
-| aarch64-linux | 6.18.42 | Mainline Linux v6.18.42 | .#packages.aarch64-linux.linux_6_18 |
-| aarch64-linux | 7.1.6 | Mainline Linux v7.1.6 | .#packages.aarch64-linux.linux_7_1 |
-| x86_64-linux | 6.18.42 | Linux v6.18.42 with surface-linux patches applied | .#packages.x86_64-linux.linux-surface_6_18 |
-| x86_64-linux | 6.18.42 | Mainline Linux v6.18.42 | .#packages.x86_64-linux.linux_6_18 |
-| x86_64-linux | 7.1.6 | Mainline Linux v7.1.6 | .#packages.x86_64-linux.linux_7_1 |
+| description | version | arch | package name |
+|-------------|---------|------|--------------|
+| Mainline Linux v6.18.42 | `6.18.42` | `aarch64-linux` | `linux_6_18` |
+| Mainline Linux v7.1.6 | `7.1.6` | `aarch64-linux` | `linux_7_1` |
+| Linux v6.18.42 with surface-linux patches applied | `6.18.42` | `x86_64-linux` | `linux-surface_6_18` |
+| Mainline Linux v6.18.42 | `6.18.42` | `x86_64-linux` | `linux_6_18` |
+| Mainline Linux v7.1.6 | `7.1.6` | `x86_64-linux` | `linux_7_1` |

@@ -16,13 +16,42 @@ extra-substituters = https://nixos-kernels.cachix.org
 extra-trusted-public-keys = nixos-kernels.cachix.org-1:RIMUFtH7hjB2skf7CYu5yy+4zsd3uEVsR+2OprRtKdQ=
 ```
 
+Add this repository to your flake inputs
+
+```
+{
+  ...
+  inputs = {
+    ...
+    nixos-kernels.url = "github:sjagoe/nixos-kernels";
+    nixos-kernels.inputs.nixpkgs.follows = "nixpkgs";
+    ...
+  };
+
+  outputs = { ... }@inputs: {
+    ...
+    nixosConfigurations.hosts.hostname.specialArgs = { inherit inputs; };
+  };
+}
+```
+
+And in your host configuration, set the appropriate kernel packages:
+
+```
+{ config, pkgs, lib, inputs, ... }:
+
+{
+  config.boot.kernelPackages = pkgs.linuxPackagesFor inputs.nixos-kernels.packages.${pkgs.stdenv.hostPlatform.system}.linux_7_1;
+}
+```
+
 
 ## Included kernels
 
 This project provides the following kernels:
 
-| arch | version | description | attribute |
-|------|---------|-------------|-----------|
+| description | version | arch | package name |
+|-------------|---------|------|--------------|
 EOF
 
 packages="$(nix eval --json .#packages)"
@@ -42,9 +71,8 @@ description() {
 for arch in "${archs[@]}"; do
     mapfile -t kernels < <(echo "$packages" | jq -er --arg arch "$arch" '.[$arch] | keys | .[]')
     for kernel in "${kernels[@]}"; do
-        attrib=".#packages.$arch.$kernel"
-        version="$(nix eval --json "${attrib}.version" | jq -er .)"
+        version="$(nix eval --json ".#packages.$arch.$kernel.version" | jq -er .)"
         desc="$(description "$kernel" "$version")"
-        echo "| $arch | $version | $desc | $attrib |"
+        echo "| $desc | "'`'"$version"'`'" | "'`'"$arch"'`'" | "'`'"$kernel"'`'" |"
     done
 done
