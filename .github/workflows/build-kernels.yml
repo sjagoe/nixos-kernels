@@ -46,11 +46,9 @@ jobs:
           cat <<'EOF' > removepatterns
           ^ant.*
           ^apache2$
-          ^aria2$
           ^autoconf$
           ^automake$
           ^bison$
-          ^brotli$
           ^build-essential$
           ^buildah$
           ^containerd\.io$
@@ -65,17 +63,13 @@ jobs:
           ^google-cloud-cli$
           ^kubectl$
           ^lldb.*
-          ^libmysql.*
-          ^libpq.*
           ^microsoft-edge-stable$
           ^mysql.*
           ^nginx$
-          ^otelcol.*
           ^packages-microsoft-prod$
           ^php.*
           ^postgresql.*
           ^powershell$
-          ^ruby.*
           ^skopeo$
           ^temurin.*
           EOF
