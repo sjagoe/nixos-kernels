@@ -41,7 +41,7 @@
 
       runner-label = arch:
         if (arch == "aarch64-linux") then
-          "ubuntu-latest-arm" else
+          "ubuntu-24.04-arm" else
             "ubuntu-latest";
 
       lock = builtins.fromJSON (builtins.readFile ./flake.lock);
