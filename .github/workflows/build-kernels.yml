@@ -59,6 +59,8 @@ jobs:
           mapfile -t REMOVE < <(apt-mark showmanual | grep --file removepatterns)
           sudo apt-get remove --purge --autoremove "${REMOVE[@]}"
 
+          rm -rf /usr/local/julia1* /opt/hostedtoolcache/Python || true
+
           df -h
 
           sudo du -sh /{var,opt/hostedtoolcache,usr/local}/* | sort -h
