@@ -94,8 +94,8 @@ function main() {
 
         local pr_create_body=
         pr_create_body="$(
-          jq -ne --argjson label_id "$label_id" --arg head "$UPDATE_BRANCH" --arg title "$title" --arg body "$full_description" \
-          '{"assignee":"sjagoe","base":"main","head":$head, "title": $title, "body": $body, "labels": [$label_id]}'
+          jq -ne --arg head "$UPDATE_BRANCH" --arg title "$title" --arg body "$full_description" \
+          '{"base":"main","head":$head, "title": $title, "body": $body}'
         )"
 
         local created_pr=
@@ -111,12 +111,20 @@ function main() {
         local label_data=
         label_data="$(jq -en --arg label "$UPDATE_BRANCH" '{labels: [$label]}')"
         github_api \
-            "/repos/$GITHUB_REPOSITOR/issues/${pr_number}/labels" \
+            "/repos/${GITHUB_REPOSITORY}/issues/${pr_number}/labels" \
             -X POST \
             -H "Content-Type: application/json" \
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2026-03-10" \
             -d "$label_data"
+
+        github_api \
+            "/repos/${GITHUB_REPOSITORY}/pulls/${pr_number}/requested_reviewers" \
+            -X POST \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2026-03-10" \
+            -d '{"reviewers":["sjagoe"]}'
     fi
 }
 
