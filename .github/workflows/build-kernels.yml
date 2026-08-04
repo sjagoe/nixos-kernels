@@ -109,11 +109,15 @@ jobs:
           FINAL_TARGETS=()
 
           for target in "${TARGETS[@]}"; do
+            echo "Evaluate $target"
             store_path="$(nix eval --json "$target" | jq -er . | sed 's/\//%2F/g')"
-            exists="$(curl \
+            echo "$store_path"
+            cachix_resp="$(curl \
               -H "Accept: application/json" \
               -H "Authorization: Bearer $CACHIX_AUTH_TOKEN" \
-              "https://cachix.org/api/v1/cache/nixos-kernels/search/${store_path}" | jq -er '(. | length) > 0')"
+              "https://cachix.org/api/v1/cache/nixos-kernels/search/${store_path}")"
+            echo "$cachix_resp"
+            exists="$(echo "$cachix_resp" | jq -er '(. | length) > 0')"
             if [[ "$exists" == "true" ]]; then
               echo "Skipping build of $target"
               echo "It's already cached"
