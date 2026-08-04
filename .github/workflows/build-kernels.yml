@@ -105,5 +105,21 @@ jobs:
             --print-build-logs
           )
           mapfile -t TARGETS <<< "$BUILD_TARGETS"
-          echo "Building targets ${TARGETS[*]}"
-          nix build "${TARGETS[@]}" "${OPTIONS[@]}"
+          FINAL_TARGETS=()
+
+          for target in "${TARGETS[@]}"; do
+            store_path="$(nix eval --json "$target" | jq -er . | sed 's/\//%2F/g')"
+            exists="$(curl \
+              -H "Accept: application/json" \
+              -H "Authorization: Bearer $CACHIX_TOKEN" \
+              "https://cachix.org/api/v1/cache/nixos-kernels/search/${store_path}" | jq -er '(. | length) > 0')"
+            if [[ "$exists" == "true" ]]; then
+              echo "Skipping build of $target"
+              echo "It's already cached"
+            else
+              FINAL_TARGETS=("${FINAL_TARGETS[@]}" "$target")
+            fi
+          done
+
+          echo "Building targets ${FINAL_TARGETS[*]}"
+          nix build "${FINAL_TARGETS[@]}" "${OPTIONS[@]}"
