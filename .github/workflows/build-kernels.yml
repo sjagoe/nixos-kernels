@@ -61,6 +61,8 @@ jobs:
 
           df -h
 
+          sudo du -sh /*
+
   # matrix:
   #   name: Generate matrix
   #   runs-on: ubuntu-latest
