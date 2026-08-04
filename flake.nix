@@ -2,11 +2,12 @@
   description = "NixOS Kernels from mainline kernel.org";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-26.05";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
   };
 
   outputs = { self, nixpkgs }:
     let
+      inherit (nixpkgs) lib;
       systems = [ "x86_64-linux" "aarch64-linux" ];
       kernelHashes = (builtins.fromJSON (builtins.readFile ./kernels.json)).hashes;
 
@@ -15,14 +16,7 @@
         (map
           (system:
             let
-              pkgs = import nixpkgs {
-                inherit system;
-                config.allowUnfreePredicate = pkg: builtins.elem (nixpkgs.lib.getName pkg) [
-                  "nvidia-x11"
-                  "nvidia-kernel-modules"
-                  "nvidia-settings"
-                ];
-              };
+              pkgs = nixpkgs.legacyPackages.${system};
             in
             { name = system; value = mainline.generatePackages system kernelHashes pkgs; })
           systems);
@@ -31,7 +25,7 @@
       surfaceKernelVersion =
         builtins.elemAt
           (builtins.filter
-            (version: (builtins.match "^${nixpkgs.lib.escapeRegex surfaceKernelRelease}\.[[:digit:]]+" version) != null)
+            (version: (builtins.match "^${lib.escapeRegex surfaceKernelRelease}\.[[:digit:]]+" version) != null)
             (builtins.attrNames kernelHashes))
           0;
 
@@ -43,10 +37,24 @@
         };
       };
 
-      packages = nixpkgs.lib.attrsets.recursiveUpdate mainlinePackages surfacePackages;
+      packages = lib.attrsets.recursiveUpdate mainlinePackages surfacePackages;
+
+      runner-label = arch:
+        if (arch == "aarch64-linux") then
+          "ubuntu-24.04-arm" else
+            "ubuntu-latest";
+
+      lock = builtins.fromJSON (builtins.readFile ./flake.lock);
+      nixos-release = lock.nodes.nixpkgs.original.ref;
     in
       {
         inherit packages;
-        ci.build = nixpkgs.lib.mapAttrsToList (name: pkg: ".#packages.x86_64-linux.${name}") packages.x86_64-linux;
+        ci.build =
+          lib.flatten (map
+            ({ runs-on, arch, pkgs }:
+              map (pkg: { inherit runs-on nixos-release; build = ".#packages.${arch}.${pkg}"; }) (builtins.attrNames pkgs))
+            (lib.mapAttrsToList
+              (arch: pkgs: { runs-on = runner-label arch; inherit arch pkgs; })
+              packages));
       };
 }
