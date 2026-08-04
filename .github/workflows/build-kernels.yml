@@ -40,6 +40,53 @@ jobs:
         include: ${{ fromJson(needs.matrix.outputs.matrix) }}
     runs-on: ${{ matrix.runs-on }}
     steps:
+      - name: Clean disk
+        run: |
+          df -h
+          cat <<'EOF' > removepatterns
+          ^ant.*
+          ^apache2$
+          ^aria2$
+          ^autoconf$
+          ^automake$
+          ^bison$
+          ^brotli$
+          ^build-essential$
+          ^buildah$
+          ^containerd\.io$
+          ^docker-ce.*
+          ^gortran.*
+          ^clang.*
+          ^firefox$
+          ^flex$
+          ^g++.*
+          ^gcc$
+          ^google-chrome-stable$
+          ^google-cloud-cli$
+          ^kubectl$
+          ^lldb.*
+          ^libmysql.*
+          ^libpq.*
+          ^microsoft-edge-stable$
+          ^mysql.*
+          ^nginx$
+          ^otelcol.*
+          ^packages-microsoft-prod$
+          ^php.*
+          ^postgresql.*
+          ^powershell$
+          ^ruby.*
+          ^skopeo$
+          ^temurin.*
+          EOF
+
+          mapfile -t REMOVE < <(apt-mark showmanual | grep --file removepatterns)
+          sudo apt-get remove --purge --autoremove "${REMOVE[@]}"
+
+          sudo rm -rf /usr/local/julia1* /opt/hostedtoolcache/Py{thon,Py} /opt/hostedtoolcache/go /usr/local/lib/android /usr/share/dotnet /usr/share/swift /var/lib/containerd /usr/local/share/powershell || true
+
+          df -h
+
       - name: Checkout
         uses: actions/checkout@v7
 
