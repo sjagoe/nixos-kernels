@@ -64,7 +64,11 @@ description() {
     if [[ "${kernel}" =~ surface ]]; then
         echo "Linux v$version with surface-linux patches applied"
     else
-        echo "Mainline Linux v$version"
+        if [[ "$version" =~ ^6\.18\. ]]; then
+            echo "Linux LTS v$version"
+        else
+            echo "Linux stable v$version"
+        fi
     fi
 }
 
