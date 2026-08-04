@@ -97,7 +97,7 @@ jobs:
       - name: Build
         env:
           BUILD: ${{ matrix.build }}
-          CACHIX_AUTH_TOKEN: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+          CACHIX_AUTH_TOKEN: '${{ secrets.CACHIX_METADATA_TOKEN }}'
         run: |
           BUILD_TARGETS="$(nix eval --json "${BUILD}.outputs" | jq -er --arg target "$BUILD" 'foreach .[] as $output (null; "\($target).\($output)")')"
           OPTIONS=(
@@ -109,14 +109,11 @@ jobs:
           FINAL_TARGETS=()
 
           for target in "${TARGETS[@]}"; do
-            echo "Evaluate $target"
             store_path="$(nix eval --json "$target" | jq -er . | sed 's/\//%2F/g')"
-            echo "$store_path"
             cachix_resp="$(curl \
               -H "Accept: application/json" \
               -H "Authorization: Bearer $CACHIX_AUTH_TOKEN" \
               "https://cachix.org/api/v1/cache/nixos-kernels/search/${store_path}")"
-            echo "$cachix_resp"
             exists="$(echo "$cachix_resp" | jq -er '(. | length) > 0')"
             if [[ "$exists" == "true" ]]; then
               echo "Skipping build of $target"
