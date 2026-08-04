@@ -24,7 +24,7 @@ jobs:
         id: matrix
         run: |
           echo "Store paths to build"
-          nix eval --json .#packages
+          nix eval --json .#packages | jq .
           echo "===="
           builds="$(nix eval --json .#ci.build)"
           separator="matrix-$RANDOM"
