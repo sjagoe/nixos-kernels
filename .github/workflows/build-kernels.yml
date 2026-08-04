@@ -7,61 +7,92 @@ on:
     branches: [main]
 
 jobs:
-  matrix:
-    name: Generate matrix
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.matrix.outputs.matrix }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - uses: cachix/install-nix-action@v31
-        with:
-          nix_path: nixpkgs=channel:nixos-unstable
-
-      - name: Build matrix
-        id: matrix
-        run: |
-          builds="$(nix eval --json .#ci.build)"
-          separator="matrix-$RANDOM"
-          {
-            echo "matrix<<$separator"
-            echo "$builds" | jq -e .
-            echo "$separator"
-          } >> "$GITHUB_OUTPUT"
-          cat "$GITHUB_OUTPUT"
-
-  build:
-    name: Build kernel
-    needs: matrix
+  test-disk-cleanup:
     strategy:
       matrix:
-        include: ${{ fromJson(needs.matrix.outputs.matrix) }}
+        runs-on:
+          - avrea-ubuntu-latest-4-vcpu
+          - avrea-ubuntu-latest-arm-4-vcpu
     runs-on: ${{ matrix.runs-on }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - uses: cachix/install-nix-action@v31
-        with:
-          nix_path: nixpkgs=channel:${{ matrix.nixos-release }}
-
-      - uses: cachix/cachix-action@v17
-        with:
-          name: nixos-kernels
-          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-
-      - name: Build
-        env:
-          BUILD: ${{ matrix.build }}
+      - name: Clean disk
         run: |
-          BUILD_TARGETS="$(nix eval --json "${BUILD}.outputs" | jq -er --arg target "$BUILD" 'foreach .[] as $output (null; "\($target).\($output)")')"
-          OPTIONS=(
-            --no-link
-            --print-out-paths
-            --print-build-logs
-          )
-          mapfile -t TARGETS <<< "$BUILD_TARGETS"
-          echo "Building targets ${TARGETS[*]}"
-          nix build "${TARGETS[@]}" "${OPTIONS[@]}"
+          df -h
+          apt-get remove --purge --autoremove \
+            'ant-optional' \
+            'apache2' \
+            'build-essential' \
+            'gortran*' \
+            'clang*' \
+            'firefox' \
+            'g++*' \
+            'google-chrome-stable' \
+            'google-cloud-cli' \
+            'microsoft-edge-stable' \
+            'packages-microsoft-prod' \
+            'php*' \
+            'postgresql*' \
+            'powershell' \
+            'ruby*' \
+            'skopeo' \
+            'temurin*'
+          df -h
+
+  # matrix:
+  #   name: Generate matrix
+  #   runs-on: ubuntu-latest
+  #   outputs:
+  #     matrix: ${{ steps.matrix.outputs.matrix }}
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v7
+
+  #     - uses: cachix/install-nix-action@v31
+  #       with:
+  #         nix_path: nixpkgs=channel:nixos-unstable
+
+  #     - name: Build matrix
+  #       id: matrix
+  #       run: |
+  #         builds="$(nix eval --json .#ci.build)"
+  #         separator="matrix-$RANDOM"
+  #         {
+  #           echo "matrix<<$separator"
+  #           echo "$builds" | jq -e .
+  #           echo "$separator"
+  #         } >> "$GITHUB_OUTPUT"
+  #         cat "$GITHUB_OUTPUT"
+
+  # build:
+  #   name: Build kernel
+  #   needs: matrix
+  #   strategy:
+  #     matrix:
+  #       include: ${{ fromJson(needs.matrix.outputs.matrix) }}
+  #   runs-on: ${{ matrix.runs-on }}
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v7
+
+  #     - uses: cachix/install-nix-action@v31
+  #       with:
+  #         nix_path: nixpkgs=channel:${{ matrix.nixos-release }}
+
+  #     - uses: cachix/cachix-action@v17
+  #       with:
+  #         name: nixos-kernels
+  #         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+
+  #     - name: Build
+  #       env:
+  #         BUILD: ${{ matrix.build }}
+  #       run: |
+  #         BUILD_TARGETS="$(nix eval --json "${BUILD}.outputs" | jq -er --arg target "$BUILD" 'foreach .[] as $output (null; "\($target).\($output)")')"
+  #         OPTIONS=(
+  #           --no-link
+  #           --print-out-paths
+  #           --print-build-logs
+  #         )
+  #         mapfile -t TARGETS <<< "$BUILD_TARGETS"
+  #         echo "Building targets ${TARGETS[*]}"
+  #         nix build "${TARGETS[@]}" "${OPTIONS[@]}"
