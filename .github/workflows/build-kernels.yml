@@ -61,7 +61,7 @@ jobs:
 
           df -h
 
-          sudo du -sh /*
+          sudo du -sh /{home,opt,usr}/* | sort -h
 
   # matrix:
   #   name: Generate matrix
