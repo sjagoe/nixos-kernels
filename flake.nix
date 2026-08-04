@@ -41,8 +41,8 @@
 
       runner-label = arch:
         if (arch == "aarch64-linux") then
-          "ubuntu-24.04-arm" else
-            "ubuntu-latest";
+          "avrea-ubuntu-latest-arm-4-vcpu" else
+            "avrea-ubuntu-latest-4-vcpu";
 
       lock = builtins.fromJSON (builtins.readFile ./flake.lock);
       nixos-release = lock.nodes.nixpkgs.original.ref;
