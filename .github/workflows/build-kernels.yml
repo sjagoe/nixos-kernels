@@ -9,6 +9,7 @@ on:
 jobs:
   test-disk-cleanup:
     strategy:
+      fail-fast: false
       matrix:
         runs-on:
           - avrea-ubuntu-latest-4-vcpu
@@ -17,6 +18,7 @@ jobs:
     steps:
       - name: Clean disk
         run: |
+          apt-mark showmanual
           df -h
           sudo apt-get remove --purge --autoremove \
             'ant-optional' \
