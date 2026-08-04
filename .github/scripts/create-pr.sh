@@ -15,29 +15,14 @@ function github_api() {
          "$@" "https://api.github.com/$url"
 }
 
-function label_id_for_branch() {
-    local repo="$1"
-    local branch="$2"
-
-    local labels=
-    labels="$(github_api "repos/$repo/labels")"
-
-    local label_id=
-    label_id="$(echo "$labels" | jq -er --arg branch "$branch" '.[] | select(.name == $branch) | .id')"
-    echo "$label_id"
-}
-
 function pr_exists() {
     local repo="$1"
     local branch="$2"
     local PR_COUNT=
     local PRs=
 
-    local label_id=
-    label_id="$(label_id_for_branch "$repo" "$branch")"
-
     log "Checking for existing PR for branch $branch"
-    PRs="$(github_api "repos/${repo}/pulls?state=open&labels=${label_id}" | jq -e '[.[] | .number]')"
+    PRs="$(github_api "search/issues?q=repo:${repo}%20is:open%20is:pr%20label:%22${branch}%22" | jq -e '[.items[] | .number]')"
 
     PR_COUNT="$(echo "$PRs" | jq '. | length')"
     if [ "$PR_COUNT" -gt 0 ]; then
@@ -107,19 +92,31 @@ function main() {
     if [ -n "$git_changes" ] || branch_exists "$GITHUB_REPOSITORY" "$UPDATE_BRANCH"; then
         log "Found pushed branch; creating PR"
 
-        local label_id=
-        label_id="$(label_id_for_branch "$GITHUB_REPOSITORY" "$UPDATE_BRANCH")"
         local pr_create_body=
         pr_create_body="$(
           jq -ne --argjson label_id "$label_id" --arg head "$UPDATE_BRANCH" --arg title "$title" --arg body "$full_description" \
           '{"assignee":"sjagoe","base":"main","head":$head, "title": $title, "body": $body, "labels": [$label_id]}'
         )"
 
-        github_api \
+        local created_pr=
+        created_pr="$(github_api \
            "repos/$GITHUB_REPOSITORY/pulls" \
            -X POST \
            -H "Content-Type: application/json" \
-           -d "$pr_create_body"
+           -d "$pr_create_body")"
+
+        local pr_number=
+        pr_number="$(echo "$created_pr" | jq -er '.number')"
+
+        local label_data=
+        label_data="$(jq -en --arg label "$UPDATE_BRANCH" '{labels: [$label]}')"
+        github_api \
+            "/repos/$GITHUB_REPOSITOR/issues/${pr_number}/labels" \
+            -X POST \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2026-03-10" \
+            -d "$label_data"
     fi
 }
 
