@@ -99,6 +99,7 @@ jobs:
           BUILD: ${{ matrix.build }}
           CACHIX_AUTH_TOKEN: '${{ secrets.CACHIX_METADATA_TOKEN }}'
         run: |
+          set -x
           BUILD_TARGETS="$(nix eval --json "${BUILD}.outputs" | jq -er --arg target "$BUILD" 'foreach .[] as $output (null; "\($target).\($output)")')"
           OPTIONS=(
             --no-link
