@@ -3,8 +3,18 @@ name: Build kernels
 on:
   pull_request:
     branches: [main]
+    paths-ignore:
+      - README.md
+      - .github/workflows/update.yml
+      - .github/scripts/create-pr.sh
+      - .github/scripts/generate-readme.sh
   push:
     branches: [main]
+    paths-ignore:
+      - README.md
+      - .github/workflows/update.yml
+      - .github/scripts/create-pr.sh
+      - .github/scripts/generate-readme.sh
 
 jobs:
   matrix:
