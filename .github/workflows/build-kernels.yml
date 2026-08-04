@@ -63,7 +63,7 @@ jobs:
 
           df -h
 
-          sudo du -sh /{var,opt/hostedtoolcache,usr/local}/* | sort -h
+          sudo du -sh /{var/lib,usr/local/lib,usr/local/share,usr/share}/* | sort -h
 
   # matrix:
   #   name: Generate matrix
