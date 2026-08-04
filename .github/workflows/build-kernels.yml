@@ -18,26 +18,30 @@ jobs:
     steps:
       - name: Clean disk
         run: |
-          apt-mark showmanual
           df -h
-          sudo apt-get remove --purge --autoremove \
-            'ant-optional' \
-            'apache2' \
-            'build-essential' \
-            'gortran*' \
-            'clang*' \
-            'firefox' \
-            'g++*' \
-            'google-chrome-stable' \
-            'google-cloud-cli' \
-            'microsoft-edge-stable' \
-            'packages-microsoft-prod' \
-            'php*' \
-            'postgresql*' \
-            'powershell' \
-            'ruby*' \
-            'skopeo' \
-            'temurin*'
+          cat <<'EOF' > removepatterns
+          ^ant-optional$
+          ^apache2$
+          ^build-essential$
+          ^gortran.*
+          ^clang.*
+          ^firefox$
+          ^g++.*
+          ^google-chrome-stable$
+          ^google-cloud-cli$
+          ^microsoft-edge-stable$
+          ^packages-microsoft-prod$
+          ^php.*
+          ^postgresql.*
+          ^powershell$
+          ^ruby.*
+          ^skopeo$
+          ^temurin.*
+          EOF
+
+          mapfile -t REMOVE < <(apt-mark showmanual | grep --file removepatterns)
+          sudo apt-get remove --purge --autoremove "${REMOVE[@]}"
+
           df -h
 
   # matrix:
