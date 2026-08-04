@@ -59,7 +59,7 @@ jobs:
           mapfile -t REMOVE < <(apt-mark showmanual | grep --file removepatterns)
           sudo apt-get remove --purge --autoremove "${REMOVE[@]}"
 
-          rm -rf /usr/local/julia1* /opt/hostedtoolcache/Py{thon,Py} || true
+          rm -rf /usr/local/julia1* /opt/hostedtoolcache/Py{thon,Py} /opt/hostedtoolcache/go || true
 
           df -h
 
