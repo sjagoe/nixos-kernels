@@ -110,14 +110,13 @@ jobs:
 
           for target in "${TARGETS[@]}"; do
             store_path="$(nix eval --json "$target" | jq -er . | sed 's/\//%2F/g')"
-            cachix_resp="$(curl \
+            cachix_resp="$(curl -fsSL \
               -H "Accept: application/json" \
               -H "Authorization: Bearer $CACHIX_AUTH_TOKEN" \
               "https://cachix.org/api/v1/cache/nixos-kernels/search/${store_path}")"
             exists="$(echo "$cachix_resp" | jq -er '(. | length) > 0')"
             if [[ "$exists" == "true" ]]; then
-              echo "Skipping build of $target"
-              echo "It's already cached"
+              echo "Skipping build of already-cached $target"
             else
               FINAL_TARGETS=("${FINAL_TARGETS[@]}" "$target")
             fi
