@@ -5,9 +5,18 @@ let
 
       major = lib.versions.major version;
       minor = lib.versions.minor version;
+      release = lib.versions.majorMinor version;
 
       kernelFor = version:
-        pkgs."linux_${major}_${minor}";
+        let
+          standardName = lib.traceValSeq "linux_${major}_${minor}";
+          hasKernel = lib.traceValSeq (pkgs ? "${standardName}");
+          testingVersion = lib.traceValSeq (lib.versions.majorMinor pkgs.linux_testing.version);
+          isTesting = release == testingVersion;
+        in
+          if (hasKernel) then pkgs.${standardName} else
+            if (isTesting) then pkgs.linux_testing else
+              throw "Linux ${release} is not available to override from nixpkgs";
     in
       (kernelFor version).override {
         argsOverride = {
