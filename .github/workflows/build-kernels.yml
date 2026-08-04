@@ -121,5 +121,10 @@ jobs:
             fi
           done
 
+          if [ "${#FINAL_TARGETS[@]}" --eq 0 ]; then
+            echo "Nothing to do"
+            exit 0
+          fi
+
           echo "Building targets ${FINAL_TARGETS[*]}"
           nix build "${FINAL_TARGETS[@]}" "${OPTIONS[@]}"
