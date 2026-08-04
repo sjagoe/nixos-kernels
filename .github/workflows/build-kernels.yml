@@ -99,7 +99,6 @@ jobs:
           BUILD: ${{ matrix.build }}
           CACHIX_AUTH_TOKEN: '${{ secrets.CACHIX_METADATA_TOKEN }}'
         run: |
-          set -x
           BUILD_TARGETS="$(nix eval --json "${BUILD}.outputs" | jq -er --arg target "$BUILD" 'foreach .[] as $output (null; "\($target).\($output)")')"
           OPTIONS=(
             --no-link
@@ -115,7 +114,7 @@ jobs:
               -H "Accept: application/json" \
               -H "Authorization: Bearer $CACHIX_AUTH_TOKEN" \
               "https://cachix.org/api/v1/cache/nixos-kernels/search/${store_path}")"
-            exists="$(echo "$cachix_resp" | jq -er '(. | length) > 0')"
+            exists="$(echo "$cachix_resp" | jq -r '(. | length) > 0')"
             if [[ "$exists" == "true" ]]; then
               echo "Skipping build of already-cached $target"
             else
