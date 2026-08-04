@@ -106,7 +106,7 @@ jobs:
             --print-build-logs
           )
           mapfile -t TARGETS <<< "$BUILD_TARGETS"
-          FINAL_TARGETS=()
+          declare -a FINAL_TARGETS
 
           for target in "${TARGETS[@]}"; do
             store_path="$(nix eval --json "$target" | jq -er . | sed 's/\//%2F/g')"
@@ -122,6 +122,9 @@ jobs:
               FINAL_TARGETS=("${FINAL_TARGETS[@]}" "$target")
             fi
           done
+
+          echo "${FINAL_TARGETS[*]}"
+          echo "${#FINAL_TARGETS[@]}"
 
           if [ "${#FINAL_TARGETS[@]}" --eq 0 ]; then
             echo "Nothing to do"
