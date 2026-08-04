@@ -23,6 +23,9 @@ jobs:
       - name: Build matrix
         id: matrix
         run: |
+          echo "Store paths to build"
+          nix eval --json .#packages | jq .
+          echo "===="
           builds="$(nix eval --json .#ci.build)"
           separator="matrix-$RANDOM"
           {
@@ -40,6 +43,45 @@ jobs:
         include: ${{ fromJson(needs.matrix.outputs.matrix) }}
     runs-on: ${{ matrix.runs-on }}
     steps:
+      - name: Clean disk
+        run: |
+          df -h
+          cat <<'EOF' > removepatterns
+          ^ant.*
+          ^apache2$
+          ^autoconf$
+          ^automake$
+          ^bison$
+          ^build-essential$
+          ^buildah$
+          ^gortran.*
+          ^clang.*
+          ^firefox$
+          ^flex$
+          ^g++.*
+          ^gcc$
+          ^google-chrome-stable$
+          ^google-cloud-cli$
+          ^kubectl$
+          ^lldb.*
+          ^microsoft-edge-stable$
+          ^mysql.*
+          ^nginx$
+          ^packages-microsoft-prod$
+          ^php.*
+          ^postgresql.*
+          ^powershell$
+          ^skopeo$
+          ^temurin.*
+          EOF
+
+          mapfile -t REMOVE < <(apt-mark showmanual | grep --file removepatterns)
+          sudo apt-get remove --purge --autoremove "${REMOVE[@]}"
+
+          sudo rm -rf /usr/local/julia1* /opt/hostedtoolcache/Py{thon,Py} /opt/hostedtoolcache/go /usr/local/lib/android /usr/share/dotnet /usr/share/swift /usr/local/share/powershell || true
+
+          df -h
+
       - name: Checkout
         uses: actions/checkout@v7
 
@@ -55,6 +97,7 @@ jobs:
       - name: Build
         env:
           BUILD: ${{ matrix.build }}
+          CACHIX_AUTH_TOKEN: '${{ secrets.CACHIX_METADATA_TOKEN }}'
         run: |
           BUILD_TARGETS="$(nix eval --json "${BUILD}.outputs" | jq -er --arg target "$BUILD" 'foreach .[] as $output (null; "\($target).\($output)")')"
           OPTIONS=(
@@ -63,5 +106,26 @@ jobs:
             --print-build-logs
           )
           mapfile -t TARGETS <<< "$BUILD_TARGETS"
-          echo "Building targets ${TARGETS[*]}"
-          nix build "${TARGETS[@]}" "${OPTIONS[@]}"
+          declare -a FINAL_TARGETS
+
+          for target in "${TARGETS[@]}"; do
+            store_path="$(nix eval --json "$target" | jq -er . | sed 's/\//%2F/g')"
+            cachix_resp="$(curl -fsSL \
+              -H "Accept: application/json" \
+              -H "Authorization: Bearer $CACHIX_AUTH_TOKEN" \
+              "https://cachix.org/api/v1/cache/nixos-kernels/search/${store_path}")"
+            exists="$(echo "$cachix_resp" | jq -r '(. | length) > 0')"
+            if [[ "$exists" == "true" ]]; then
+              echo "Skipping build of already-cached $target"
+            else
+              FINAL_TARGETS=("${FINAL_TARGETS[@]}" "$target")
+            fi
+          done
+
+          if [ "${#FINAL_TARGETS[@]}" -eq 0 ]; then
+            echo "Nothing to do"
+            exit 0
+          fi
+
+          echo "Building targets ${FINAL_TARGETS[*]}"
+          nix build "${FINAL_TARGETS[@]}" "${OPTIONS[@]}"
