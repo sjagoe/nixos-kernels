@@ -52,9 +52,25 @@
       {
         inherit packages;
         ci.build =
+          let
+            pathToHash = path:
+            builtins.elemAt
+              (builtins.match "^/nix/store/([^-]+).*" path) 0;
+            outputPaths = package: map (out: package.${out}.outPath) package.outputs;
+            outputHashes = paths: map pathToHash paths;
+          in
           lib.flatten (map
             ({ runs-on, arch, pkgs }:
-              map (pkg: { inherit runs-on nixos-release; build = ".#packages.${arch}.${pkg}"; }) (builtins.attrNames pkgs))
+              map (pkg:
+                let
+                  paths = outputPaths pkgs.${pkg};
+                in
+                  {
+                    inherit runs-on nixos-release paths;
+                    build = ".#packages.${arch}.${pkg}";
+                    outputHashes = outputHashes paths;
+                  })
+                (builtins.attrNames pkgs))
             (lib.mapAttrsToList
               (arch: pkgs: { runs-on = runner-label arch; inherit arch pkgs; })
               packages));
