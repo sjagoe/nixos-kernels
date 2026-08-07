@@ -12,21 +12,6 @@ jobs:
     env:
       UPDATE_BRANCH: ci/update/kernels
     steps:
-      - name: Create app token
-        id: app-token
-        uses: actions/create-github-app-token@v3
-        with:
-          client-id: ${{ vars.PR_CREATE_APP_CLIENT_ID }}
-          private-key: ${{ secrets.PR_CREATE_APP_PRIVATE_KEY }}
-
-      - name: Get GitHub App User ID
-        id: get-user-id
-        env:
-          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-        run: |
-          echo "user-id=$(gh api "/users/${APP_SLUG}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
-
       - name: Determine base
         id: base
         shell: bash
@@ -46,31 +31,16 @@ jobs:
           ref: ${{ steps.base.outputs.ref }}
           token: ${{ steps.app-token.outputs.token }}
 
-      - uses: cachix/install-nix-action@v31
+      - name: Prepare update branch
+        uses: ./.github/actions/update-prepare.yml
         with:
-          nix_path: nixpkgs=channel:nixos-unstable
-
-      - name: Checkout update branch
-        shell: bash
-        env:
-          REF: ${{ steps.base.outputs.ref }}
-          UPDATE_BRANCH: ${{ env.UPDATE_BRANCH }}
-          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
-          USER_ID: ${{ steps.get-user-id.outputs.user-id }}
-        run: |
-          git config user.name "${APP_SLUG}[bot]"
-          git config user.email "${USER_ID}+${APP_SLUG}[bot]@users.noreply.github.com"
-          git switch --create "$UPDATE_BRANCH" --track "origin/$UPDATE_BRANCH" ||
-              git switch --create "$UPDATE_BRANCH"
-          if ! git rebase "origin/$REF"; then
-              git rebase --abort
-              git reset --hard "origin/$REF"
-          fi
+          client-id: ${{ vars.PR_CREATE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.PR_CREATE_APP_PRIVATE_KEY }}
+          update-branch-name: ${{ env.UPDATE_BRANCH }}
+          pull-request-base: ${{ steps.base.outputs.ref }}
 
       - name: Update kernels
         id: update
-        env:
-          GIT_REF: ${{ steps.base.outputs.ref }}
         run: |
           bash ./update-kernels.sh
 
