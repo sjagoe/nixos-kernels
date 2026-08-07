@@ -119,7 +119,7 @@ jobs:
 
       - name: Finalize overall build status status
         env:
-        TARGET_URL: "$https://github.com/${{ github.repository }}/actions/runs/${{ github.run_number }}"
+          TARGET_URL: "$https://github.com/${{ github.repository }}/actions/runs/${{ github.run_number }}"
           STATE: ${{ needs.build.result }}
           STATUS_TOKEN: ${{ steps.app-token.outputs.token }}
           CONTEXT: ci/build/status
