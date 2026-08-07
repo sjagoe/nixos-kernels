@@ -9,9 +9,9 @@ let
 
       kernelFor = version:
         let
-          standardName = lib.traceValSeq "linux_${major}_${minor}";
-          hasKernel = lib.traceValSeq (pkgs ? "${standardName}");
-          testingVersion = lib.traceValSeq (lib.versions.majorMinor pkgs.linux_testing.version);
+          standardName = "linux_${major}_${minor}";
+          hasKernel = pkgs ? "${standardName}";
+          testingVersion = lib.versions.majorMinor pkgs.linux_testing.version;
           isTesting = release == testingVersion;
         in
           if (hasKernel) then pkgs.${standardName} else
