@@ -130,6 +130,9 @@ jobs:
 
           data="$(jq -ne --arg url "$TARGET_URL" --arg state "$STATE" --arg context "$CONTEXT" \
                      '{context:$context,state:$state,target_url:$url}')"
+
+          echo "$data" | jq .
+
           curl -fsSL \
                -H "Authorization: Bearer $STATUS_TOKEN" \
                -H "Accept: application/vnd.github+json" \
