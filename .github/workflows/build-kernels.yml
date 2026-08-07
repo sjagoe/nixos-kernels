@@ -33,17 +33,7 @@ jobs:
       - name: Build matrix
         id: matrix
         run: |
-          echo "Store paths to build"
-          nix eval --json .#packages | jq .
-          echo "===="
-          builds="$(nix eval --json .#ci.build)"
-          separator="matrix-$RANDOM"
-          {
-            echo "matrix<<$separator"
-            echo "$builds" | jq -e .
-            echo "$separator"
-          } >> "$GITHUB_OUTPUT"
-          cat "$GITHUB_OUTPUT"
+          bash .github/scripts/build-matrix.sh
 
   build:
     name: Build kernel
@@ -53,9 +43,6 @@ jobs:
         include: ${{ fromJson(needs.matrix.outputs.matrix) }}
     runs-on: ${{ matrix.runs-on }}
     steps:
-      - name: Clean disk
-        uses: sjagoe/avrea-disk-space-action@v1.0.2
-
       - name: Checkout
         uses: actions/checkout@v7
 
@@ -68,17 +55,13 @@ jobs:
           name: nixos-kernels
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
-      - name: Build
+      - name: Filter build targets
+        id: filter-builds
         env:
           BUILD: ${{ matrix.build }}
           CACHIX_AUTH_TOKEN: '${{ secrets.CACHIX_METADATA_TOKEN }}'
         run: |
           BUILD_TARGETS="$(nix eval --json "${BUILD}.outputs" | jq -er --arg target "$BUILD" 'foreach .[] as $output (null; "\($target).\($output)")')"
-          OPTIONS=(
-            --no-link
-            --print-out-paths
-            --print-build-logs
-          )
           mapfile -t TARGETS <<< "$BUILD_TARGETS"
           declare -a FINAL_TARGETS
 
@@ -91,6 +74,7 @@ jobs:
             exists="$(echo "$cachix_resp" | jq -r '(. | length) > 0')"
             if [[ "$exists" == "true" ]]; then
               echo "Skipping build of already-cached $target"
+              echo "$store_path is already in cache"
             else
               FINAL_TARGETS=("${FINAL_TARGETS[@]}" "$target")
             fi
@@ -98,9 +82,40 @@ jobs:
 
           if [ "${#FINAL_TARGETS[@]}" -eq 0 ]; then
             echo "Nothing to do"
+            {
+              echo targets=
+              echo build-required=false
+            } >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
+          separator="build-targets-$RANDOM"
+          {
+            echo "targets<<$separator"
+            for item in "${FINAL_TARGETS[@]}"; do
+              echo "$item"
+            done
+            echo "$separator"
+            echo build-required=true
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Clean disk
+        if: steps.filter-builds.outputs.build-required == 'true'
+        uses: sjagoe/avrea-disk-space-action@v1.0.2
+
+      - name: Build
+        if: steps.filter-builds.outputs.build-required == 'true'
+        env:
+          TARGETS: ${{ steps.filter-builds.outputs.targets }}
+        run: |
+          OPTIONS=(
+            --no-link
+            --print-out-paths
+            --print-build-logs
+            --option extra-substituters "https://nixos-kernels.cachix.org"
+            --option extra-trusted-public-keys "nixos-kernels.cachix.org-1:RIMUFtH7hjB2skf7CYu5yy+4zsd3uEVsR+2OprRtKdQ="
+          )
+          mapfile -t FINAL_TARGETS <<< "$TARGETS"
           echo "Building targets ${FINAL_TARGETS[*]}"
           nix build "${FINAL_TARGETS[@]}" "${OPTIONS[@]}"
 
