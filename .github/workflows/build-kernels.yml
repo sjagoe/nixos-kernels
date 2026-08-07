@@ -132,8 +132,9 @@ jobs:
                      '{context:$context,state:$state,target_url:$url}')"
           curl -fsSL \
                -H "Authorization: Bearer $STATUS_TOKEN" \
-               -H "Accept: application/json" \
+               -H "Accept: application/vnd.github+json" \
                -H "Content-Type: application/json" \
+               -H "X-GitHub-Api-Version: 2026-03-10" \
                -X POST \
                -d "$data" \
                "https://api.github.com/repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA"
