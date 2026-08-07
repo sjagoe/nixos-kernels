@@ -82,6 +82,10 @@ jobs:
 
           if [ "${#FINAL_TARGETS[@]}" -eq 0 ]; then
             echo "Nothing to do"
+            {
+              echo targets=
+              echo build-required=false
+            } >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -92,12 +96,15 @@ jobs:
               echo "$item"
             done
             echo "$separator"
+            echo build-required=true
           } >> "$GITHUB_OUTPUT"
 
       - name: Clean disk
+        if: steps.filter-builds.outputs.build-required == 'true'
         uses: sjagoe/avrea-disk-space-action@v1.0.2
 
       - name: Build
+        if: steps.filter-builds.outputs.build-required == 'true'
         env:
           TARGETS: ${{ steps.filter-builds.outputs.targets }}
         run: |
