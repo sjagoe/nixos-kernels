@@ -81,6 +81,7 @@ jobs:
             exists="$(echo "$cachix_resp" | jq -r '(. | length) > 0')"
             if [[ "$exists" == "true" ]]; then
               echo "Skipping build of already-cached $target"
+              echo "$store_path is already in cache"
             else
               FINAL_TARGETS=("${FINAL_TARGETS[@]}" "$target")
             fi
