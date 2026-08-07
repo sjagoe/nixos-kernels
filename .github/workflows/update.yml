@@ -66,3 +66,59 @@ jobs:
             echo "$filename"
           done
           bash ".github/scripts/create-pr.sh" "$MESSAGE" "$DESCRIPTION" "${FILES[@]}"
+
+  update-flake-inputs:
+    name: Update flake inputs
+    runs-on: ubuntu-latest
+    env:
+      UPDATE_BRANCH: ci/update/flakes
+    steps:
+      - name: Determine base
+        id: base
+        shell: bash
+        run: |
+          {
+              if [[ "$GITHUB_HEAD_REF" == "" ]]; then
+                  echo "ref=$GITHUB_REF_NAME"
+              else
+                  echo "ref=$GITHUB_HEAD_REF"
+              fi
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ steps.base.outputs.ref }}
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Prepare update branch
+        uses: ./.github/actions/update-prepare.yml
+        with:
+          client-id: ${{ vars.PR_CREATE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.PR_CREATE_APP_PRIVATE_KEY }}
+          update-branch-name: ${{ env.UPDATE_BRANCH }}
+          pull-request-base: ${{ steps.base.outputs.ref }}
+
+      - name: Update flake inputs
+        id: update
+        run: |
+          nix flake update
+
+      - name: Push and create PR
+        shell: bash
+        env:
+          BUILD_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          AUTHOR: "nixos-kernels-robot <nixos-kernels-robot@fake-email>"
+          UPDATE_BRANCH: ${{ env.UPDATE_BRANCH }}
+          MESSAGE: "Update flake inputs"
+          DESCRIPTION: ""
+          FILES_LIST: |
+            flake.lock
+          CREATE_PR_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          mapfile -t FILES < <(echo "$FILES_LIST" | grep -v '^$')
+          for filename in "${FILES[@]}"; do
+            echo "$filename"
+          done
+          bash ".github/scripts/create-pr.sh" "$MESSAGE" "$DESCRIPTION" "${FILES[@]}"
