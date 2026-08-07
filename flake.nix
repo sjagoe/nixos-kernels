@@ -66,9 +66,10 @@
                   paths = outputPaths pkgs.${pkg};
                 in
                   {
-                    inherit runs-on nixos-release paths;
+                    inherit runs-on nixos-release;
                     build = ".#packages.${arch}.${pkg}";
-                    outputHashes = outputHashes paths;
+                    outputHashes = (outputHashes paths);
+                    paths = paths;
                   })
                 (builtins.attrNames pkgs))
             (lib.mapAttrsToList

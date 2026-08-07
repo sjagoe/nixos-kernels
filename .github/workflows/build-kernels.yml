@@ -33,17 +33,7 @@ jobs:
       - name: Build matrix
         id: matrix
         run: |
-          echo "Store paths to build"
-          nix eval --json .#packages | jq .
-          echo "===="
-          builds="$(nix eval --json .#ci.build)"
-          separator="matrix-$RANDOM"
-          {
-            echo "matrix<<$separator"
-            echo "$builds" | jq -e .
-            echo "$separator"
-          } >> "$GITHUB_OUTPUT"
-          cat "$GITHUB_OUTPUT"
+          bash .github/scripts/build-matrix.sh
 
   build:
     name: Build kernel
