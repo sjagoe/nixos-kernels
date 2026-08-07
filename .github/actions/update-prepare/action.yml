@@ -2,11 +2,11 @@ name: Build and cache nix artefacts
 description: >
   Run a build and cache the result
 inputs:
-  pr-create-app-client-id:
-    description: Client ID for the create-pr GitHub app
+  token:
+    description: GitHub App Token
     required: true
-  pr-create-app-private-key:
-    description: Private Key for the create-pr GitHub app
+  app-slug:
+    description: GitHub App user slug
     required: true
   update-branch-name:
     description: Branch name for the PR created by update
@@ -18,18 +18,12 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Create app token
-      id: app-token
-      uses: actions/create-github-app-token@v3
-      with:
-        client-id: ${{ inputs.pr-create-app-client-id }}
-        private-key: ${{ inputs.pr-create-app-private-key }}
-
     - name: Get GitHub App User ID
       id: get-user-id
       env:
-        APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
-        GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        APP_SLUG: ${{ inputs.app-slug }}
+        GH_TOKEN: ${{ inputs.token }}
+      shell: bash
       run: |
         echo "user-id=$(gh api "/users/${APP_SLUG}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
 
@@ -42,7 +36,7 @@ runs:
       env:
         REF: ${{ inputs.pull-request-base }}
         UPDATE_BRANCH: ${{ inputs.update-branch-name }}
-        APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+        APP_SLUG: ${{ inputs.app-slug }}
         USER_ID: ${{ steps.get-user-id.outputs.user-id }}
       run: |
         git config user.name "${APP_SLUG}[bot]"

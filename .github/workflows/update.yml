@@ -12,6 +12,13 @@ jobs:
     env:
       UPDATE_BRANCH: ci/update/kernels
     steps:
+      - name: Create app token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.PR_CREATE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.PR_CREATE_APP_PRIVATE_KEY }}
+
       - name: Determine base
         id: base
         shell: bash
@@ -32,10 +39,10 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Prepare update branch
-        uses: ./.github/actions/update-prepare.yml
+        uses: ./.github/actions/update-prepare
         with:
-          client-id: ${{ vars.PR_CREATE_APP_CLIENT_ID }}
-          private-key: ${{ secrets.PR_CREATE_APP_PRIVATE_KEY }}
+          token: ${{ steps.app-token.outputs.token }}
+          app-slug: ${{ steps.app-token.outputs.app-slug }}
           update-branch-name: ${{ env.UPDATE_BRANCH }}
           pull-request-base: ${{ steps.base.outputs.ref }}
 
@@ -73,6 +80,13 @@ jobs:
     env:
       UPDATE_BRANCH: ci/update/flakes
     steps:
+      - name: Create app token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.PR_CREATE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.PR_CREATE_APP_PRIVATE_KEY }}
+
       - name: Determine base
         id: base
         shell: bash
@@ -93,10 +107,10 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Prepare update branch
-        uses: ./.github/actions/update-prepare.yml
+        uses: ./.github/actions/update-prepare
         with:
-          client-id: ${{ vars.PR_CREATE_APP_CLIENT_ID }}
-          private-key: ${{ secrets.PR_CREATE_APP_PRIVATE_KEY }}
+          token: ${{ steps.app-token.outputs.token }}
+          app-slug: ${{ steps.app-token.outputs.app-slug }}
           update-branch-name: ${{ env.UPDATE_BRANCH }}
           pull-request-base: ${{ steps.base.outputs.ref }}
 
