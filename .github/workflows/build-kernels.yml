@@ -68,6 +68,8 @@ jobs:
             --no-link
             --print-out-paths
             --print-build-logs
+            --option extra-substituters "https://nixos-kernels.cachix.org"
+            --option extra-trusted-public-keys "nixos-kernels.cachix.org-1:RIMUFtH7hjB2skf7CYu5yy+4zsd3uEVsR+2OprRtKdQ="
           )
           mapfile -t TARGETS <<< "$BUILD_TARGETS"
           declare -a FINAL_TARGETS
