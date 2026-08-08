@@ -7,7 +7,12 @@ on:
 jobs:
   enable-automerge:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.user.login == 'nixos-kernels-pull-requests[bot]' && contains(github.event.pull_request.labels.*.name, 'ci/update/flakes')
+    if: >-
+      github.event.pull_request.user.login == 'nixos-kernels-pull-requests[bot]' &&
+      (
+      contains(github.event.pull_request.labels.*.name, 'ci/update/flakes') ||
+      contains(github.event.pull_request.labels.*.name, 'ci/update/kernels')
+      )
     steps:
       - name: Create app token
         id: app-token
