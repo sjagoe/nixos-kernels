@@ -11,6 +11,7 @@ jobs:
     name: Generate matrix
     runs-on: ubuntu-latest
     outputs:
+      continue: ${{ steps.matrix.outputs.continue }}
       matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
       - name: Checkout
@@ -27,6 +28,7 @@ jobs:
 
   build:
     name: Build kernel
+    if: needs.matrix.outpus.continue == 'true'
     needs: matrix
     strategy:
       matrix:
@@ -119,4 +121,4 @@ jobs:
         env:
           STATE: ${{ needs.build.result }}
         run: |
-          [[ "$STATE" == "success" ]]
+          [[ "$STATE" == "success" ]] || [[ "$STATE" == "skipped" ]]
