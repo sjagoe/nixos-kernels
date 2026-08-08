@@ -38,6 +38,11 @@ function branch_exists() {
     local branch="$2"
     log "Checking for existing branch $branch"
     if github_api "repos/${repo}/branches/${branch}" >/dev/null; then
+        # The branch we're checking is an ancestor of origin/main;
+        # it's not newly-pushed changes
+        if git merge-base --is-ancestor "origin/${branch}" origin/main; then
+            return 1
+        fi
         return 0
     else
         return 1
