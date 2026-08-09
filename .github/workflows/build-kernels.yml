@@ -28,7 +28,7 @@ jobs:
 
   build:
     name: Build kernel
-    if: needs.matrix.outpus.continue == 'true'
+    if: needs.matrix.outputs.continue == 'true'
     needs: matrix
     strategy:
       matrix:
