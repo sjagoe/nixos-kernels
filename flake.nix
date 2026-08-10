@@ -77,7 +77,7 @@
             in
               {
                 options.nixos-kernels = {
-                  enable = (mkEnableOption "Enable custom kernel builds") // { default = true; };
+                  enable = (mkEnableOption "Enable custom kernel builds");
                   package = mkOption {
                     default = self.packages.${pkgs.stdenv.hostPlatform.system}.linux_6_18;
                     type = types.raw;
