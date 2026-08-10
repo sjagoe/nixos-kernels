@@ -98,7 +98,7 @@
                     linuxPackages = pkgs.linuxPackagesFor cfg.package;
                   in
                     mkIf cfg.enable {
-                      config.nixos-kernels.blockedModules = lib.mkDefault blockedModules;
+                      nixos-kernels.blockedModules = lib.mkDefault blockedModules;
 
                       boot.kernelPackages = if (cfg.force) then
                         lib.mkForce linuxPackages else linuxPackages;
