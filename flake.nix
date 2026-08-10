@@ -50,6 +50,61 @@
       nixos-release = lock.nodes.nixpkgs.original.ref;
     in
       {
+        nixosModules.default = { config, pkgs, lib, ... }:
+          let
+            inherit (lib) mkIf mkEnableOption mkOption mkPackageOption types;
+          in
+            {
+              options.nixos-kernels = {
+                enable = (mkEnableOption "Enable custom kernel builds") // { default = true; };
+                package = mkOption {
+                  default = self.packages.${pkgs.stdenv.hostPlatform.system}.linux_6_18;
+                  type = types.raw;
+                };
+                force = mkOption {
+                  type = types.bool;
+                  default = false;
+                };
+                blockedModules = mkOption {
+                  type = types.listOf types.str;
+                  default = [
+                    # Copy Fail CVE-2026-31431
+                    "af_alg"
+                    "algif_hash"
+                    "algif_skcipher"
+                    "algif_rng"
+                    "algif_aead"
+
+                    # dirtyfrag CVE-2026-43284 & CVE-2026-43500
+                    "esp4"
+                    "esp6"
+                    "rxrpc"
+
+                    # PinTheft
+                    # https://openwall.com/lists/oss-security/2026/05/19/37
+                    "rds"
+                    "rds_rdma"
+                    "rds_tcp"
+                  ];
+                };
+              };
+
+              config =
+                let
+                  cfg = config.nixos-kernels;
+                  linuxPackages = pkgs.linuxPackagesFor cfg.package;
+                in
+                  mkIf cfg.enable {
+                    boot.kernelPackages = if (cfg.force) then
+                      lib.mkForce linuxPackages else linuxPackages;
+                    boot.extraModprobeConfig =
+                      let
+                        blacklists = map (m: "blacklist ${m}") cfg.blockedModules;
+                        installs = map (m: "install ${m} /bin/false") cfg.blockedModules;
+                      in
+                        lib.concatStringsSep "\n" (blacklists ++ installs);
+                  };
+            };
         inherit packages;
         ci.build =
           let
