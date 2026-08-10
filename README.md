@@ -6,42 +6,44 @@ Kernels built from kernel.org sources.
 
 Binaries are available from the `nixos-kernels` cachix.org cache.
 
-Add the follwing to your `nix.conf`:
-
-```
-extra-substituters = https://nixos-kernels.cachix.org
-extra-trusted-public-keys = nixos-kernels.cachix.org-1:RIMUFtH7hjB2skf7CYu5yy+4zsd3uEVsR+2OprRtKdQ=
-```
-
-Add this repository to your flake inputs
+Example flake configuration using `nixos-kernels`:
 
 ```
 {
-  ...
+  description = "NixOS configuration";
+
+  nixConfig = {
+    extra-substituters = [
+      "https://nixos-kernels.cachix.org"
+    ];
+    extra-trusted-public-keys = [
+      "nixos-kernels.cachix.org-1:RIMUFtH7hjB2skf7CYu5yy+4zsd3uEVsR+2OprRtKdQ="
+    ];
+  };
+
   inputs = {
-    ...
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
     nixos-kernels.url = "github:sjagoe/nixos-kernels";
     nixos-kernels.inputs.nixpkgs.follows = "nixpkgs";
-    ...
   };
 
-  outputs = { ... }@inputs: {
-    ...
-    nixosConfigurations.hosts.hostname.specialArgs = { inherit inputs; };
+  outputs = inputs@{ nixpkgs, nixos-kernels, ... }: {
+    nixosConfigurations = {
+      hostname = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        modules = [
+          ./configuration.nix
+          nixos-kernels.nixosModules.nixos-kernels
+          ({ config, pkgs, ... }: {
+            nixos-kernels.enable = true;
+            nixos-kernels.package = nixos-kernels.packages.${pkgs.stdenv.hostPlatform.system}.linux_7_1;
+          })
+        ];
+      };
+    };
   };
 }
 ```
-
-And in your host configuration, set the appropriate kernel packages:
-
-```
-{ config, pkgs, lib, inputs, ... }:
-
-{
-  config.boot.kernelPackages = pkgs.linuxPackagesFor inputs.nixos-kernels.packages.${pkgs.stdenv.hostPlatform.system}.linux_7_1;
-}
-```
-
 
 ## Included kernels
 
