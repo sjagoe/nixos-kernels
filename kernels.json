@@ -1,10 +1,12 @@
 {
   "hashes": {
     "6.18.44": "sha256-D3LZOPBoKOgskEBRdP5XIofbe/4Ini/EZXKpmn8kDUM=",
-    "7.1.8": "sha256-/wHctEknnVtM/M2wH+5jnPX/GAPxdJp3hE3TORVCLEk="
+    "7.1.8": "sha256-/wHctEknnVtM/M2wH+5jnPX/GAPxdJp3hE3TORVCLEk=",
+    "7.2": "sha256-+f7z0UwN9TgZAm9L50RZg1wqCw3L9bW72eoZ8IKUArM="
   },
   "versions": [
     "6.18",
-    "7.1"
+    "7.1",
+    "7.2"
   ]
 }
