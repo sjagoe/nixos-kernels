@@ -25,7 +25,7 @@ let
             inherit hash;
           };
           inherit version;
-          modDirVersion = version;
+          modDirVersion = lib.versions.pad 3 version;
         };
       };
 in
