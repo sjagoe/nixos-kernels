@@ -2,6 +2,10 @@
 
 set -euo pipefail
 
+log() {
+    echo "$*"
+} 1>&2
+
 kernels="$(jq . < kernels.json)"
 
 configure_gpg() {
@@ -77,19 +81,39 @@ configure_gpg
 
 mapfile -t VERSIONS < <(echo "$kernels" | jq -er '.versions[]')
 
+# shellcheck disable=SC2016
+COMPARE_VERSIONS='
+include "semver";
+.hashes | keys | .[] | select(. | test($release_r)) as $existing |
+$version | cmp_semver($existing) <= 0
+'
+
+has_version() {
+    local kernels="$1"
+    local version="$2"
+    local release="$3"
+
+    log "Checking for $version (release $release)"
+
+    echo "$kernels" | jq -er -L./jq \
+       --arg release_r "^${release//\./\\.}(\..*)?$" \
+       --arg version "$version" \
+       "$COMPARE_VERSIONS" >/dev/null
+}
+
+
 for version in "${VERSIONS[@]}"; do
     if ! full_version="$(latest_version "$version")"; then
-        echo "No kernel release found for ${version}"
+        log "No kernel release found for ${version}"
         continue
     fi
-    echo "Checking $full_version"
-    if ! echo "$kernels" | jq -e --arg version "$full_version" '.hashes | has($version)' > /dev/null; then
-        echo "Fetching $full_version"
-        major="${full_version//.*/}"
+    if ! echo "$kernels" | has_version "$kernels" "$full_version" "$version"; then
+        log "Fetching $full_version"
         path="$(fetch_kernel "$full_version")"
         hash="$(nix-prefetch-url "file://${path}")"
         hash="$(nix hash convert --hash-algo sha256 --from nix32 "$hash")"
-
+        kernels="$(echo "$kernels" | jq -e --arg oldrelease "${version//\./\\.}" \
+          '.hashes = (.hashes | to_entries | [.[] | select(.key | test("^\($oldrelease)\\.") | not)] | from_entries)')"
         kernels="$(echo "$kernels" | jq -e --arg version "$full_version" --arg hash "$hash" '.hashes[$version] = $hash')"
     fi
 done
