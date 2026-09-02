@@ -51,10 +51,10 @@ This project provides the following kernels:
 
 | description | version | arch | package name |
 |-------------|---------|------|--------------|
-| Linux LTS v6.18.48 | `6.18.48` | `aarch64-linux` | `linux_6_18` |
-| Linux stable v7.1.12 | `7.1.12` | `aarch64-linux` | `linux_7_1` |
-| Linux stable v7.2.2 | `7.2.2` | `aarch64-linux` | `linux_7_2` |
-| Linux v6.18.48 with surface-linux patches applied | `6.18.48` | `x86_64-linux` | `linux-surface_6_18` |
-| Linux LTS v6.18.48 | `6.18.48` | `x86_64-linux` | `linux_6_18` |
-| Linux stable v7.1.12 | `7.1.12` | `x86_64-linux` | `linux_7_1` |
-| Linux stable v7.2.2 | `7.2.2` | `x86_64-linux` | `linux_7_2` |
+| Linux LTS v6.18.49 | `6.18.49` | `aarch64-linux` | `linux_6_18` |
+| Linux stable v7.1.13 | `7.1.13` | `aarch64-linux` | `linux_7_1` |
+| Linux stable v7.2.3 | `7.2.3` | `aarch64-linux` | `linux_7_2` |
+| Linux v6.18.49 with surface-linux patches applied | `6.18.49` | `x86_64-linux` | `linux-surface_6_18` |
+| Linux LTS v6.18.49 | `6.18.49` | `x86_64-linux` | `linux_6_18` |
+| Linux stable v7.1.13 | `7.1.13` | `x86_64-linux` | `linux_7_1` |
+| Linux stable v7.2.3 | `7.2.3` | `x86_64-linux` | `linux_7_2` |
