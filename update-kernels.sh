@@ -8,6 +8,8 @@ log() {
 
 kernels="$(jq . < kernels.json)"
 
+latest_releases="$(nix-shell -p python3Packages.{python,semver,feedparser} --command 'python ./latest-releases.py')"
+
 configure_gpg() {
     mkdir -p ~/.gnupg
     chmod go-rwx ~/.gnupg
@@ -61,20 +63,8 @@ fetch_kernel() {
 
 latest_version() {
     local version="$1"
-    local major="${version//.*/}"
-    local versions=
-    versions="$(curl -fsSL "https://cdn.kernel.org/pub/linux/kernel/v${major}.x/" | grep 'a href="ChangeLog' | cut -d'"' -f2 | cut -d- -f2 | grep "^${version//./\\.}\(\.\|$\)")"
-    if [[ "$versions" == "" ]]; then
-        return 1
-    fi
-    echo "$versions" 1>&2
-    patch="$(echo "$versions" | cut -d. -f3 | sort -n | tail -n1)"
-    if [[ "$patch" == "" ]]; then
-        # We've hit the initial release of the series, which is only MAJOR.MINOR without a patch
-        echo "$version"
-    else
-        echo "${version}.${patch}"
-    fi
+
+    echo "$latest_releases" | jq -er --arg release "$version" '.[$release]'
 }
 
 configure_gpg
