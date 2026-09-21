@@ -19,7 +19,7 @@ default-key 0xD90B6E429FFA9334
 default-preference-list SHA512 SHA384 SHA256 SHA224 AES256 AES192 AES ZLIB BZIP2 ZIP Uncompressed
 display-charset utf-8
 keyid-format 0xlong
-keyserver hkps://keyserver.ubuntu.com
+keyserver hkps://keys.openpgp.org
 list-options show-uid-validity
 no-comments
 no-emit-version
