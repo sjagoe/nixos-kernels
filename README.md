@@ -51,8 +51,8 @@ This project provides the following kernels:
 
 | description | version | arch | package name |
 |-------------|---------|------|--------------|
-| Linux LTS v6.18.53 | `6.18.53` | `aarch64-linux` | `linux_6_18` |
-| Linux stable v7.2.7 | `7.2.7` | `aarch64-linux` | `linux_7_2` |
-| Linux v6.18.53 with surface-linux patches applied | `6.18.53` | `x86_64-linux` | `linux-surface_6_18` |
-| Linux LTS v6.18.53 | `6.18.53` | `x86_64-linux` | `linux_6_18` |
-| Linux stable v7.2.7 | `7.2.7` | `x86_64-linux` | `linux_7_2` |
+| Linux LTS v6.18.54 | `6.18.54` | `aarch64-linux` | `linux_6_18` |
+| Linux stable v7.2.8 | `7.2.8` | `aarch64-linux` | `linux_7_2` |
+| Linux v6.18.54 with surface-linux patches applied | `6.18.54` | `x86_64-linux` | `linux-surface_6_18` |
+| Linux LTS v6.18.54 | `6.18.54` | `x86_64-linux` | `linux_6_18` |
+| Linux stable v7.2.8 | `7.2.8` | `x86_64-linux` | `linux_7_2` |
