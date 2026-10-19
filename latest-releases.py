@@ -14,7 +14,7 @@ def parse_id(id):
     _, _, version, _ = id.split(",")
     if rc.match(version) is None:
         return None
-    ver = semver.Version.parse(version)
+    ver = semver.Version.parse(version, optional_minor_and_patch=True)
     release = f"{ver.major}.{ver.minor}"
     return release, version
 
