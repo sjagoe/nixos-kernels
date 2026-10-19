@@ -12,8 +12,9 @@ latest_releases="$(nix-shell -p python3Packages.{python,semver,feedparser} --com
 
 configure_gpg() {
     mkdir -p ~/.gnupg
-    chmod go-rwx ~/.gnupg
-    cat <<'EOF' > ~/.gnupg/gpg.conf
+    if [ -f ~/.gnupg/gpg.conf ] && [ -w ~/.gnupg/gpg.conf ] || [ ! -L ~/.gnupg/gpg.conf ]; then
+        chmod go-rwx ~/.gnupg
+        cat <<'EOF' > ~/.gnupg/gpg.conf
 cert-digest-algo SHA512
 default-key 0xD90B6E429FFA9334
 default-preference-list SHA512 SHA384 SHA256 SHA224 AES256 AES192 AES ZLIB BZIP2 ZIP Uncompressed
@@ -33,6 +34,7 @@ s2k-digest-algo SHA512
 verify-options show-uid-validity
 with-fingerprint
 EOF
+    fi
 
     # gregkh@kernel.org
     gpg --recv-keys 0x38DBBDC86092693E 1>&2
