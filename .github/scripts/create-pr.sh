@@ -6,6 +6,24 @@ function log() {
     echo "[$(date -Iseconds)] $*"
 } 1>&2
 
+function group_output() {
+    local name="$1"
+    local command="$2"
+    local result=0
+    shift 2
+
+    echo "::group::${name}"
+
+    set +e
+    "$command" "$@"
+    result="$?"
+    set -e
+
+    echo "::endgroup::"
+
+    return "$result"
+}
+
 function github_api() {
     local url="$1"
     shift
@@ -85,7 +103,7 @@ function main() {
         local pr_update_body=
         pr_update_body="$(jq -ne --arg body "$full_description" --arg title "$title" '{title: $title, body: $body}')"
 
-        github_api \
+        group_output "Updating PR" github_api \
            "repos/$GITHUB_REPOSITORY/pulls/${pr_id}" \
            -X PATCH \
            -H "Content-Type: application/json" \
@@ -117,7 +135,7 @@ function main() {
             "repos/${GITHUB_REPOSITORY}/pulls/${pr_number}" \
             -H "Content-Type: application/json" \
             -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2026-03-10"; do
+            -H "X-GitHub-Api-Version: 2026-03-10" >/dev/null ; do
             echo "Waiting for PR" 1>&2
             sleep 5;
         done
@@ -125,7 +143,7 @@ function main() {
         local label_data=
         label_data="$(jq -en --arg label "$UPDATE_BRANCH" '{labels: [$label]}')"
 
-        github_api \
+        group_output "Set PR labels" github_api \
             "repos/${GITHUB_REPOSITORY}/issues/${pr_number}/labels" \
             -X POST \
             -H "Content-Type: application/json" \
@@ -133,7 +151,7 @@ function main() {
             -H "X-GitHub-Api-Version: 2026-03-10" \
             -d "$label_data"
 
-        github_api \
+        group_output "Set PR reviewers" github_api \
             "repos/${GITHUB_REPOSITORY}/pulls/${pr_number}/requested_reviewers" \
             -X POST \
             -H "Content-Type: application/json" \
