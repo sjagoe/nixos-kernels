@@ -1,8 +1,8 @@
 {
   "hashes": {
-    "6.18.59": "sha256-U6VayYY6VUfikrjjgdTkwiQN0RJ9VCinxE28VQviOWM=",
-    "7.2.13": "sha256-COewxPLdGXH5ctonS15YmpiYk5CsVqzXoaWvkiNj6mw=",
-    "7.3": "sha256-hzY8JPEOBjIes2J2VSEJTpRHH2v/i84taz5A858ASVM="
+    "6.18.60": "sha256-PC9E72rMAhp61ETZoubsHvSI/wk2h5PQAEpggPadYh4=",
+    "7.2.14": "sha256-uxuHHvlajeELP3t7rw4NdUq79iD4BLbK+GDyJqqXZH0=",
+    "7.3.1": "sha256-+llarZNzT4KcljwqkO98NnMiT9f9rntJQG45fN4t4jE="
   },
   "versions": [
     "6.18",
