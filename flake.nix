@@ -39,7 +39,7 @@
 
       packages = lib.attrsets.recursiveUpdate mainlinePackages surfacePackages;
 
-      runner-size = "8-vcpu";
+      runner-size = "8-vcpu-16gb";
       runner-arch = arch:
         if (arch == "aarch64-linux") then
           "arm-" else "";
