@@ -20,10 +20,10 @@ let
 
   # Fetch the latest linux-surface patches
   linux-surface = pkgs.fetchFromGitHub {
-    owner = "linux-surface";
+    owner = "sjagoe";
     repo = "linux-surface";
-    rev = "adaa886b84c651ac044e8fc5727ec8b84bf216a7";
-    hash = "sha256-Fgf/COHtLwz/PFPPUp3Mz56hL7viz2RtvAuYvlieYdo=";
+    rev = "dfd771c647dfb2f6b53bbf98050b2f80d34e5d57";
+    hash = "sha256-zo1EWQ0lh93B2s5sOzQPdoGsBTh/lwj9EpoQpaSL08A=";
   };
 
   # Fetch and build the kernel
