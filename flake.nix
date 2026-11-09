@@ -24,7 +24,7 @@
 
       sortedReleases =  (lib.sort (a: b: (lib.versions.compareVersions a b) < 0) kernels-json.versions);
       surfaceKernelReleases = {
-        # Assumes the lowest version is LTS
+        # Assumes the lowest version is LTS and highest is stable
         lts = lib.lists.head sortedReleases;
       };
       surfaceKernelVersions =
@@ -37,7 +37,10 @@
                   (builtins.attrNames kernelHashes))
                 0;
             in
-              version)
+              {
+                release = lib.versions.majorMinor version;
+                inherit version;
+              })
           surfaceKernelReleases;
 
       nameSurfaceKernel = version: "linux-surface_${lib.strings.replaceStrings ["."] ["_"] (lib.versions.majorMinor version)}";
@@ -46,12 +49,13 @@
         x86_64-linux = lib.listToAttrs
           (map (kernel:
             let
-              version = kernel.value;
+              inherit (kernel.value) version release;
             in
             {
               name = nameSurfaceKernel version;
               value = import ./surface-kernel {
-                inherit version;
+                inherit (kernel) name;
+                inherit version release;
                 pkgs = nixpkgs.legacyPackages.x86_64-linux;
                 hash = kernelHashes.${version};
               };

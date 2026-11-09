@@ -1,28 +1,21 @@
 {
   pkgs,
   version,
-  hash
+  release,
+  hash,
+  name,
 }:
 
 let
-  inherit (builtins)
-    attrNames;
-
-  inherit (pkgs) lib;
-
-  inherit (lib)
-    mkDefault
-    mkOption
-    types
-    versions;
-
-  kernelRelease' = versions.majorMinor version;
-
   linux-surface-source = builtins.fromJSON (builtins.readFile ./linux-surface.json);
+
+  source = if linux-surface-source.${name} == null then
+    linux-surface-source.lts
+      else linux-surface-source.${name};
 
   # Fetch the latest linux-surface patches
   linux-surface = pkgs.fetchFromGitHub {
-    inherit (linux-surface-source) owner repo rev hash;
+    inherit (source) owner repo rev hash;
   };
 
   # Fetch and build the kernel
@@ -31,8 +24,8 @@ let
     surfacePatches;
   kernelPatches = surfacePatches {
     inherit version;
-    patchFn = ./kernel/${kernelRelease'}/patches.nix;
-    patchSrc = linux-surface + "/patches/${kernelRelease'}";
+    patchFn = ./kernel/${release}/patches.nix;
+    patchSrc = linux-surface + "/patches/${release}";
   };
   kernel = linuxPackage {
     inherit kernelPatches;
