@@ -26,6 +26,7 @@
       surfaceKernelReleases = {
         # Assumes the lowest version is LTS and highest is stable
         lts = lib.lists.head sortedReleases;
+        stable = lib.lists.last sortedReleases;
       };
       surfaceKernelVersions =
         builtins.mapAttrs
