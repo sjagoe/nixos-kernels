@@ -50,6 +50,9 @@ def common_args(parser):
 
 def parse_args():
     parser = argparse.ArgumentParser()
+    parser.set_defaults(
+        func=lambda *args: parser.error("No command selected"),
+    )
     subparsers = parser.add_subparsers()
     ci = subparsers.add_parser(
         "ci",
