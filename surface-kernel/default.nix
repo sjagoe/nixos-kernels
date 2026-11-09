@@ -22,6 +22,7 @@ let
   linux-surface = pkgs.fetchFromGitHub {
     owner = "linux-surface";
     repo = "linux-surface";
+    # branch = "master";
     rev = "04bf0852b351f0baec394abc95222dfa8fb37d77";
     hash = "sha256-c7HSTXZpbryzTxx4M6s8ohcxKGj7f5zV7EpZXpS4VZQ=";
   };
