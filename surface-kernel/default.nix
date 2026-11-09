@@ -18,12 +18,10 @@ let
 
   kernelRelease' = versions.majorMinor version;
 
+  linux-surface-source = builtins.fromJSON (builtins.readFile ./linux-surface.json);
   # Fetch the latest linux-surface patches
   linux-surface = pkgs.fetchFromGitHub {
-    owner = "linux-surface";
-    repo = "linux-surface";
-    rev = "04bf0852b351f0baec394abc95222dfa8fb37d77";
-    hash = "sha256-c7HSTXZpbryzTxx4M6s8ohcxKGj7f5zV7EpZXpS4VZQ=";
+    inherit (linux-surface-source) owner repo rev hash;
   };
 
   # Fetch and build the kernel
