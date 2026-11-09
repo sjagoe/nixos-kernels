@@ -9,7 +9,8 @@
     let
       inherit (nixpkgs) lib;
       systems = [ "x86_64-linux" "aarch64-linux" ];
-      kernelHashes = (builtins.fromJSON (builtins.readFile ./kernels.json)).hashes;
+      kernels-json = builtins.fromJSON (builtins.readFile ./kernels.json);
+      kernelHashes = kernels-json.hashes;
 
       mainline = import ./mainline;
       mainlinePackages = builtins.listToAttrs
@@ -21,20 +22,46 @@
             { name = system; value = mainline.generatePackages system kernelHashes pkgs; })
           systems);
 
-      surfaceKernelRelease = "6.18";
-      surfaceKernelVersion =
-        builtins.elemAt
-          (builtins.filter
-            (version: (builtins.match "^${lib.escapeRegex surfaceKernelRelease}\.[[:digit:]]+" version) != null)
-            (builtins.attrNames kernelHashes))
-          0;
+      sortedReleases =  (lib.sort (a: b: (lib.versions.compareVersions a b) < 0) kernels-json.versions);
+      surfaceKernelReleases = {
+        # Assumes the lowest version is LTS and highest is stable
+        lts = lib.lists.head sortedReleases;
+        stable = lib.lists.last sortedReleases;
+      };
+      surfaceKernelVersions =
+        builtins.mapAttrs
+          (name: release:
+            let
+              version = builtins.elemAt
+                (builtins.filter
+                  (version: (builtins.match "^${lib.escapeRegex release}\.[[:digit:]]+" version) != null)
+                  (builtins.attrNames kernelHashes))
+                0;
+            in
+              {
+                release = lib.versions.majorMinor version;
+                inherit version;
+              })
+          surfaceKernelReleases;
+
+      nameSurfaceKernel = version: "linux-surface_${lib.strings.replaceStrings ["."] ["_"] (lib.versions.majorMinor version)}";
 
       surfacePackages = {
-        x86_64-linux = import ./surface-kernel {
-          pkgs = nixpkgs.legacyPackages.x86_64-linux;
-          version = surfaceKernelVersion;
-          hash = kernelHashes.${surfaceKernelVersion};
-        };
+        x86_64-linux = lib.listToAttrs
+          (map (kernel:
+            let
+              inherit (kernel.value) version release;
+            in
+            {
+              name = nameSurfaceKernel version;
+              value = import ./surface-kernel {
+                inherit (kernel) name;
+                inherit version release;
+                pkgs = nixpkgs.legacyPackages.x86_64-linux;
+                hash = kernelHashes.${version};
+              };
+          })
+          (lib.attrsToList surfaceKernelVersions));
       };
 
       packages = lib.attrsets.recursiveUpdate mainlinePackages surfacePackages;

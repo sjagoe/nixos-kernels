@@ -33,21 +33,67 @@ def prefetch_git(owner, repo, ref):
     return json.loads(result.stdout.decode("utf-8"))
 
 
+def common_args(parser):
+    parser.add_argument(
+        "--owner",
+        help="Override the repository owner to update from",
+    )
+    parser.add_argument(
+        "--repo",
+        help="Override the repository name to update from",
+    )
+    parser.add_argument(
+        "--ref",
+        help="Override the ref to update from",
+    )
+
+
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--owner")
-    parser.add_argument("--repo")
-    parser.add_argument("--ref")
+    parser.set_defaults(
+        func=lambda *args: parser.error("No command selected"),
+    )
+    subparsers = parser.add_subparsers()
+    ci = subparsers.add_parser(
+        "ci",
+        help="Update all sources according to their current upstreams",
+    )
+    ci.set_defaults(
+        func=update_ci,
+        owner=None,
+        repo=None,
+        ref=None,
+    )
+
+    lts = subparsers.add_parser(
+        "update-lts",
+        help="Update the LTS linux-surface kernel patch source",
+    )
+    lts.set_defaults(func=update_lts)
+    common_args(lts)
+
+    stable = subparsers.add_parser(
+        "update-stable",
+        help="Update the Stable linux-surface kernel patch source"
+    )
+    stable.set_defaults(func=update_stable)
+    common_args(stable)
+
+    reset = subparsers.add_parser(
+        "reset",
+        help="Reset all patch sources to upstream linux-surface master",
+    )
+    reset.set_defaults(
+        func=update_reset,
+        owner="linux-surface",
+        repo="linux-surface",
+        ref="refs/heads/master",
+    )
 
     return parser.parse_args()
 
 
-def main():
-    configure_logging()
-    ns = parse_args()
-
-    meta = json.loads(METADATA.read_text())
-
+def update_kernel(ns, meta):
     owner = ns.owner or meta["owner"]
     repo = ns.repo or meta["repo"]
     ref = ns.ref or meta["upstream-fetch-ref"]
@@ -62,7 +108,7 @@ def main():
 
     if new_rev == current_rev and new_hash == current_hash:
         logger.info("No changes to %s/%s %s", owner, repo, ref)
-        return
+        return meta
     elif new_rev != current_rev and new_hash == current_hash:
         logger.error("%s/%s %s: Revision changed without a hash change",
                      owner, repo, ref)
@@ -72,16 +118,78 @@ def main():
                      owner, repo, ref)
         exit(1)
 
-    new_data = {
+    return {
         "upstream-fetch-ref": ref,
         "owner": owner,
         "repo": repo,
         "rev": new_rev,
         "hash": new_hash,
     }
-    tmp = METADATA.with_suffix('.json.tmp')
-    tmp.write_text(f"{json.dumps(new_data, indent=2)}\n")
-    tmp.rename(METADATA)
+
+
+def write_metadata(old_value, new_value):
+    if old_value != new_value:
+        tmp = METADATA.with_suffix('.json.tmp')
+        tmp.write_text(f"{json.dumps(new_value, indent=2)}\n")
+        tmp.rename(METADATA)
+    else:
+        logger.info("No changes detected")
+
+
+def update_ci(ns, metadata):
+    new_metadata = {
+        "lts": update_kernel(ns, metadata["lts"]),
+    }
+    if metadata["stable"] is not None:
+        new_metadata["stable"] = update_kernel(ns, metadata["stable"])
+    else:
+        new_metadata["stable"] = None
+    write_metadata(metadata, new_metadata)
+
+
+def update_lts(ns, metadata):
+    new_metadata = {
+        "lts": update_kernel(ns, metadata["lts"]),
+        "stable": metadata["stable"],
+    }
+    write_metadata(metadata, new_metadata)
+
+
+def update_stable(ns, metadata):
+    stable_meta = metadata["stable"]
+    if (
+            stable_meta is None and ns.owner is None
+            and ns.repo is None and ns.ref is None
+    ):
+        logger.error(
+            "LTS and Stable are on the same source. "
+            "To change that, pass at least one of "
+            "--owner, --repo or --ref",
+        )
+        exit(1)
+
+    if stable_meta is None:
+        stable_meta = metadata["lts"]
+    new_metadata = {
+        "lts": metadata["lts"],
+        "stable": update_kernel(ns, stable_meta),
+    }
+    write_metadata(metadata, new_metadata)
+
+
+def update_reset(ns, metadata):
+    new_metadata = {
+        "lts": update_kernel(ns, metadata["lts"]),
+        "stable": None,
+    }
+    write_metadata(metadata, new_metadata)
+
+
+def main():
+    configure_logging()
+    ns = parse_args()
+    metadata = json.loads(METADATA.read_text())
+    ns.func(ns, metadata)
 
 
 if __name__ == '__main__':
