@@ -54,5 +54,6 @@ This project provides the following kernels:
 | Linux LTS v6.18.62 | `6.18.62` | `aarch64-linux` | `linux_6_18` |
 | Linux stable v7.3.3 | `7.3.3` | `aarch64-linux` | `linux_7_3` |
 | Linux v6.18.62 with surface-linux patches applied | `6.18.62` | `x86_64-linux` | `linux-surface_6_18` |
+| Linux v7.3.3 with surface-linux patches applied | `7.3.3` | `x86_64-linux` | `linux-surface_7_3` |
 | Linux LTS v6.18.62 | `6.18.62` | `x86_64-linux` | `linux_6_18` |
 | Linux stable v7.3.3 | `7.3.3` | `x86_64-linux` | `linux_7_3` |
