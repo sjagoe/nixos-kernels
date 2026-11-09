@@ -19,6 +19,7 @@ let
   kernelRelease' = versions.majorMinor version;
 
   linux-surface-source = builtins.fromJSON (builtins.readFile ./linux-surface.json);
+
   # Fetch the latest linux-surface patches
   linux-surface = pkgs.fetchFromGitHub {
     inherit (linux-surface-source) owner repo rev hash;
@@ -40,8 +41,5 @@ let
     ignoreConfigErrors = true;
   };
 
-  kernelName = "linux-surface_${lib.strings.replaceStrings ["."] ["_"] kernelRelease'}";
 in
-{
-  ${kernelName} = kernel;
-}
+kernel
