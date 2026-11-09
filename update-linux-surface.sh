@@ -51,15 +51,15 @@ update() {
 
     if [[ "$new_rev" == "$current_rev" ]] && [[ "$new_hash" == "$current_hash" ]]; then
         log "No change detected in ${owner}/${repo} $update_branch"
-        return 1
+        return 0
     elif [[ "$new_rev" == "$current_rev" ]] && [[ "$new_hash" != "$current_hash" ]]; then
         log "Error: ${owner}/${repo} $update_branch"
         log "Revision remained the same while hash changed!"
-        exit 2
+        exit 1
     elif [[ "$new_rev" != "$current_rev" ]] && [[ "$new_hash" == "$current_hash" ]]; then
         log "Error: ${owner}/${repo} $update_branch"
         log "Hash remained the same while revision changed!"
-        exit 2
+        exit 1
     fi
 
     sed -i \
