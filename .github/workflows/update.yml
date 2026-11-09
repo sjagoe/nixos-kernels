@@ -180,7 +180,7 @@ jobs:
       - name: Update flake inputs
         id: update
         run: |
-          bash ./update-linux-surface.sh
+          python ./update-linux-surface.py
 
       - name: Push and create PR
         shell: bash
