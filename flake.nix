@@ -56,7 +56,7 @@
               name = nameSurfaceKernel version;
               value = import ./surface-kernel {
                 inherit (kernel) name;
-                inherit version release;
+                inherit version release lib;
                 pkgs = nixpkgs.legacyPackages.x86_64-linux;
                 hash = kernelHashes.${version};
               };
