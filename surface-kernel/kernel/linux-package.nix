@@ -63,7 +63,6 @@ let
       patchFn,
     }:
     pkgs.callPackage patchFn {
-      inherit (lib) kernel;
       inherit version patchSrc;
       structuredExtraConfig = structuredConfig kernelConfig;
     };
