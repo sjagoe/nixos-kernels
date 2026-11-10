@@ -188,6 +188,18 @@ def check_patches_changed(old_metadata, new_metadata):
             lts_release,
     ):
         return True
+    if old_metadata["stable"] is None and new_metadata["stable"] is None:
+        return False
+    if old_metadata["stable"] is not None and new_metadata["stable"] is None:
+        return False
+    if old_metadata["stable"] is None and new_metadata["stable"] is not None:
+        return True
+    if revisions_changed(
+            old_metadata["stable"],
+            new_metadata["stable"],
+            lts_release,
+    ):
+        return True
     return False
 
 
