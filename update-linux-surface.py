@@ -18,7 +18,6 @@ def configure_logging():
     handler = logging.StreamHandler()
     handler.setFormatter(formatter)
     handler.setLevel(logging.INFO)
-    logger = logging.getLogger('random-ipv6')
     logger.addHandler(handler)
     logger.setLevel(logging.INFO)
 
