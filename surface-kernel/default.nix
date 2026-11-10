@@ -44,7 +44,7 @@ let
       ] ++ patches;
 
   # Fetch and build the kernel
-  inherit (pkgs.callPackage ./kernel/linux-package.nix { })
+  inherit (pkgs.callPackage ./linux-package.nix { })
     linuxPackage
     surfacePatches;
   kernelPatches = surfacePatches {
