@@ -3,8 +3,11 @@
 import argparse
 import json
 import logging
+import os
 import subprocess
 from pathlib import Path
+
+import requests
 
 logger = logging.getLogger("update-linux-surface")
 
@@ -135,6 +138,59 @@ def write_metadata(old_value, new_value):
         logger.info("No changes detected")
 
 
+def kernel_releases():
+    releases = json.loads(Path("kernels.json").read_text())["versions"]
+
+    ordered = list(sorted(([int(i) for i in r.split(".")], r) for r in releases))
+    lts = ordered[0][1]
+    stable = ordered[-1][1]
+
+    return lts, stable
+
+
+def files_in_diff(owner, repo, old_rev, new_rev):
+    api_root = f"https://api.github.com/repos/{owner}/{repo}"
+    api_url = f"{api_root}/compare/{old_rev}...{new_rev}"
+
+    headers = {"Accept": "application/vnd.github+json"}
+
+    token = os.getenv("GITHUB_TOKEN")
+    if token is not None:
+        headers["Authorization"] = f"Bearer {token}"
+
+    resp = requests.get(api_url, headers=headers)
+    resp.raise_for_status()
+
+    data = resp.json()
+    return [file["filename"] for file in data["files"]]
+
+
+def revisions_changed(old_meta, new_meta, release):
+    if (
+            old_meta["owner"] != new_meta["owner"] or
+            old_meta["repo"] != new_meta["repo"]
+    ):
+        return True
+
+    owner = old_meta["owner"]
+    repo = old_meta["repo"]
+    old_rev = old_meta["rev"]
+    new_rev = new_meta["rev"]
+    return any(f.startswith(f"patches/{release}/")
+               for f in files_in_diff(owner, repo, old_rev, new_rev))
+
+
+def check_patches_changed(old_metadata, new_metadata):
+    lts_release, stable_release = kernel_releases()
+    if revisions_changed(
+            old_metadata["lts"],
+            new_metadata["lts"],
+            lts_release,
+    ):
+        return True
+    return False
+
+
 def update_ci(ns, metadata):
     new_metadata = {
         "lts": update_kernel(ns, metadata["lts"]),
@@ -143,7 +199,11 @@ def update_ci(ns, metadata):
         new_metadata["stable"] = update_kernel(ns, metadata["stable"])
     else:
         new_metadata["stable"] = None
-    write_metadata(metadata, new_metadata)
+
+    if check_patches_changed(metadata, new_metadata):
+        write_metadata(metadata, new_metadata)
+    else:
+        logger.info("Patches have not changed between revisions")
 
 
 def update_lts(ns, metadata):
