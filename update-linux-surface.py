@@ -26,7 +26,7 @@ def configure_logging():
 def prefetch_git(owner, repo, ref):
     url = f"https://github.com/{owner}/{repo}"
     result = subprocess.run(
-        ["nix-prefetch-git", url, "--rev", ref],
+        ["nix", "run", "nixpkgs#nix-prefetch-git", "--", url, "--rev", ref],
         check=True,
         stdout=subprocess.PIPE,
     )
