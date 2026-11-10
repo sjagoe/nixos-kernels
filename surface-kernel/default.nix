@@ -26,6 +26,7 @@ let
     inherit version;
     patchFn = ./kernel/${release}/patches.nix;
     patchSrc = linux-surface + "/patches/${release}";
+    kernelConfig = linux-surface + "/configs/surface-${release}.config";
   };
   kernel = linuxPackage {
     inherit kernelPatches;

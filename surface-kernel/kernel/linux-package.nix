@@ -38,8 +38,26 @@ let
     in
       buildLinux args';
 
+  structuredConfig = kernel_config:
+    let
+      config_raw = builtins.readFile kernel_config;
+      kernelConfigOption = {
+        "m" = lib.kernel.module;
+        "y" = lib.kernel.yes;
+        "n" = lib.kernel.no;
+      };
+    in
+    lib.listToAttrs
+      (map (s: {
+        name = lib.lists.head (builtins.match "([^=]+)=.*" s);
+        value = kernelConfigOption.${lib.lists.head (builtins.match "[^=]+=(.*)" s)};
+      })
+        (builtins.filter (s: s != "" && ((builtins.match "^#.*" s) == null))
+          (lib.splitStringBy (p: c: c == "\n") false config_raw)));
+
   surfacePatches =
     {
+      kernelConfig,
       patchSrc,
       version,
       patchFn,
@@ -47,6 +65,7 @@ let
     pkgs.callPackage patchFn {
       inherit (lib) kernel;
       inherit version patchSrc;
+      structuredExtraConfig = structuredConfig kernelConfig;
     };
 
   versionsOf =
