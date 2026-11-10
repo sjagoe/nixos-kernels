@@ -3,8 +3,8 @@
     "upstream-fetch-ref": "refs/heads/master",
     "owner": "linux-surface",
     "repo": "linux-surface",
-    "rev": "04bf0852b351f0baec394abc95222dfa8fb37d77",
-    "hash": "sha256-c7HSTXZpbryzTxx4M6s8ohcxKGj7f5zV7EpZXpS4VZQ="
+    "rev": "1f87a2d38a3ef5b25f48d6e5790304fc8b834556",
+    "hash": "sha256-mF404zrIC1fM3oqGXylkKCO7olYB8uMPPWy6MdjHKhU="
   },
   "stable": null
 }
