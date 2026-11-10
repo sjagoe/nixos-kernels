@@ -196,7 +196,7 @@ jobs:
           MESSAGE: "Update linux-surface"
           DESCRIPTION: ""
           FILES_LIST: |
-            surface-kernel/default.nix
+            surface-kernel/linux-surface.json
           CREATE_PR_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           mapfile -t FILES < <(echo "$FILES_LIST" | grep -v '^$')
