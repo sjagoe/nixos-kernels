@@ -1,4 +1,4 @@
-name: Update
+name: Update surface patches
 
 on:
   workflow_dispatch:
@@ -129,74 +129,6 @@ jobs:
           DESCRIPTION: ""
           FILES_LIST: |
             flake.lock
-          CREATE_PR_TOKEN: ${{ steps.app-token.outputs.token }}
-        run: |
-          mapfile -t FILES < <(echo "$FILES_LIST" | grep -v '^$')
-          for filename in "${FILES[@]}"; do
-            echo "$filename"
-          done
-          bash ".github/scripts/create-pr.sh" "$MESSAGE" "$DESCRIPTION" "${FILES[@]}"
-
-  update-linux-surface:
-    name: Update linux-surface patches
-    runs-on: ubuntu-latest
-    env:
-      UPDATE_BRANCH: ci/update/linux-surface
-    steps:
-      - name: Create app token
-        id: app-token
-        uses: actions/create-github-app-token@v3
-        with:
-          client-id: ${{ vars.PR_CREATE_APP_CLIENT_ID }}
-          private-key: ${{ secrets.PR_CREATE_APP_PRIVATE_KEY }}
-
-      - name: Determine base
-        id: base
-        shell: bash
-        run: |
-          {
-              if [[ "$GITHUB_HEAD_REF" == "" ]]; then
-                  echo "ref=$GITHUB_REF_NAME"
-              else
-                  echo "ref=$GITHUB_HEAD_REF"
-              fi
-          } >> "$GITHUB_OUTPUT"
-
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-          ref: ${{ steps.base.outputs.ref }}
-          token: ${{ steps.app-token.outputs.token }}
-
-      - name: Prepare update branch
-        uses: ./.github/actions/update-prepare
-        with:
-          token: ${{ steps.app-token.outputs.token }}
-          app-slug: ${{ steps.app-token.outputs.app-slug }}
-          update-branch-name: ${{ env.UPDATE_BRANCH }}
-          pull-request-base: ${{ steps.base.outputs.ref }}
-
-      - name: Install nix
-        uses: cachix/install-nix-action@v31
-        with:
-          nix_path: nixpkgs=channel:nixos-unstable
-
-      - name: Update linux-surface patches
-        id: update
-        run: |
-          python ./update-linux-surface.py ci
-
-      - name: Push and create PR
-        shell: bash
-        env:
-          BUILD_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          AUTHOR: "nixos-kernels-robot <nixos-kernels-robot@fake-email>"
-          UPDATE_BRANCH: ${{ env.UPDATE_BRANCH }}
-          MESSAGE: "Update linux-surface"
-          DESCRIPTION: ""
-          FILES_LIST: |
-            surface-kernel/linux-surface.json
           CREATE_PR_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           mapfile -t FILES < <(echo "$FILES_LIST" | grep -v '^$')
