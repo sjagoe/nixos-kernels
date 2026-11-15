@@ -64,7 +64,8 @@ jobs:
 
           for target in "${TARGETS[@]}"; do
             store_path="$(nix eval --json "$target" | jq -er .)"
-            narinfo="${${store_path//*\//}//-*/}.narinfo"
+            store_filename="${store_path//*\//}"
+            narinfo="${store_filename//-*/}.narinfo"
             encoded_store_path="$(echo "${store_path}" | sed 's/\//%2F/g')"
             cachix_resp="$(curl -fsSL \
               -H "Accept: application/json" \
