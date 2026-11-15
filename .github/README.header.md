@@ -1,6 +1,9 @@
-# NixOS mainline kernels
+# NixOS linux-surface kernels
 
-Kernels built from kernel.org sources.
+Kernels built from kernel.org sources for MS Surface.
+
+This flake also passes through the latest LTS and Stable kernels from
+nixos-26.05-small.
 
 ## Usage
 
