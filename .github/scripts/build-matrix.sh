@@ -11,16 +11,18 @@ valid_builds='[]'
 
 CACHES=(
     cache.nixos.org
-    nixos-kernels.cachix.org
+    nixos-surface-kernel.cachix.org
 )
 
 exists_in_cache() {
     hash="$1"
     for cache in "${CACHES[@]}"; do
-        if curl -o/dev/null -fsSL "https://${cache}/${hash}.narinfo"; then
+        if curl -o/dev/null -fsSL "https://${cache}/${hash}.narinfo" >/dev/null 2>&1; then
+            echo "$hash exists in $cache" 1>&2
             return 0
         fi
     done
+    echo "$hash is not cached" 1>&2
     return 1
 }
 

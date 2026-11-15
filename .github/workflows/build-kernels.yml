@@ -6,6 +6,10 @@ on:
   push:
     branches: [main]
 
+env:
+  CACHIX_REPO_NAME: nixos-surface-kernel
+  CACHIX_PUBLIC_KEY: nixos-surface-kernel.cachix.org-1:0NRj1XcsGihDlexYdGuRHrxP+yX8o15HUTvk4m6yGVk=
+
 jobs:
   matrix:
     name: Generate matrix
@@ -45,31 +49,35 @@ jobs:
 
       - uses: cachix/cachix-action@v17
         with:
-          name: nixos-kernels
-          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+          name: ${{ env.CACHIX_REPO_NAME }}
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN_1 }}'
 
       - name: Filter build targets
         id: filter-builds
         env:
           BUILD: ${{ matrix.build }}
-          CACHIX_AUTH_TOKEN: '${{ secrets.CACHIX_METADATA_TOKEN }}'
+          CACHIX_AUTH_TOKEN: '${{ secrets.CACHIX_METADATA_TOKEN_1 }}'
         run: |
           BUILD_TARGETS="$(nix eval --json "${BUILD}.outputs" | jq -er --arg target "$BUILD" 'foreach .[] as $output (null; "\($target).\($output)")')"
           mapfile -t TARGETS <<< "$BUILD_TARGETS"
           declare -a FINAL_TARGETS
 
           for target in "${TARGETS[@]}"; do
-            store_path="$(nix eval --json "$target" | jq -er . | sed 's/\//%2F/g')"
+            store_path="$(nix eval --json "$target" | jq -er .)"
+            narinfo="${${store_path//*\//}//-*/}.narinfo"
+            encoded_store_path="$(echo "${store_path}" | sed 's/\//%2F/g')"
             cachix_resp="$(curl -fsSL \
               -H "Accept: application/json" \
               -H "Authorization: Bearer $CACHIX_AUTH_TOKEN" \
-              "https://cachix.org/api/v1/cache/nixos-kernels/search/${store_path}")"
+              "https://cachix.org/api/v1/cache/${CACHIX_REPO_NAME}/search/${encoded_store_path}")"
             exists="$(echo "$cachix_resp" | jq -r '(. | length) > 0')"
             if [[ "$exists" == "true" ]]; then
               echo "Skipping build of already-cached $target"
               echo "$store_path is already in cache"
             else
-              FINAL_TARGETS=("${FINAL_TARGETS[@]}" "$target")
+              if ! curl -fsSL "https://cache.nixos.org/${narinfo}" >/dev/null; then
+                FINAL_TARGETS=("${FINAL_TARGETS[@]}" "$target")
+              fi
             fi
           done
 
@@ -105,8 +113,8 @@ jobs:
             --no-link
             --print-out-paths
             --print-build-logs
-            --option extra-substituters "https://nixos-kernels.cachix.org"
-            --option extra-trusted-public-keys "nixos-kernels.cachix.org-1:RIMUFtH7hjB2skf7CYu5yy+4zsd3uEVsR+2OprRtKdQ="
+            --option extra-substituters "https://${CACHIX_REPO_NAME}.cachix.org"
+            --option extra-trusted-public-keys "${CACHIX_PUBLIC_KEY}"
           )
           mapfile -t FINAL_TARGETS <<< "$TARGETS"
           echo "Building targets ${FINAL_TARGETS[*]}"

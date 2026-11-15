@@ -79,6 +79,7 @@
       {
         nixosModules = rec {
           nixos-kernels = default;
+          nixos-surface-kernel = default;
           default = { config, pkgs, lib, ... }:
             let
               inherit (lib) mkIf mkEnableOption mkOption mkPackageOption types;
