@@ -50,13 +50,13 @@ jobs:
       - uses: cachix/cachix-action@v17
         with:
           name: ${{ env.CACHIX_REPO_NAME }}
-          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN_1 }}'
 
       - name: Filter build targets
         id: filter-builds
         env:
           BUILD: ${{ matrix.build }}
-          CACHIX_AUTH_TOKEN: '${{ secrets.CACHIX_METADATA_TOKEN }}'
+          CACHIX_AUTH_TOKEN: '${{ secrets.CACHIX_METADATA_TOKEN_1 }}'
         run: |
           BUILD_TARGETS="$(nix eval --json "${BUILD}.outputs" | jq -er --arg target "$BUILD" 'foreach .[] as $output (null; "\($target).\($output)")')"
           mapfile -t TARGETS <<< "$BUILD_TARGETS"
