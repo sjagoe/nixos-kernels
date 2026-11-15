@@ -4,9 +4,9 @@ Kernels built from kernel.org sources.
 
 ## Usage
 
-Binaries are available from the `nixos-kernels` cachix.org cache.
+Binaries are available from the `nixos-surface-kernel` cachix.org cache.
 
-Example flake configuration using `nixos-kernels`:
+Example flake configuration using `nixos-surface-kernel`:
 
 ```
 {
@@ -14,29 +14,29 @@ Example flake configuration using `nixos-kernels`:
 
   nixConfig = {
     extra-substituters = [
-      "https://nixos-kernels.cachix.org"
+      "https://nixos-surface-kernel.cachix.org"
     ];
     extra-trusted-public-keys = [
-      "nixos-kernels.cachix.org-1:RIMUFtH7hjB2skf7CYu5yy+4zsd3uEVsR+2OprRtKdQ="
+      "nixos-surface-kernel.cachix.org-1:0NRj1XcsGihDlexYdGuRHrxP+yX8o15HUTvk4m6yGVk="
     ];
   };
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
-    nixos-kernels.url = "github:sjagoe/nixos-kernels";
-    nixos-kernels.inputs.nixpkgs.follows = "nixpkgs";
+    nixos-surface-kernel.url = "github:sjagoe/nixos-surface-kernel";
+    nixos-surface-kernel.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = inputs@{ nixpkgs, nixos-kernels, ... }: {
+  outputs = inputs@{ nixpkgs, nixos-surface-kernel, ... }: {
     nixosConfigurations = {
       hostname = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         modules = [
           ./configuration.nix
-          nixos-kernels.nixosModules.nixos-kernels
+          nixos-surface-kernel.nixosModules.default
           ({ config, pkgs, ... }: {
-            nixos-kernels.enable = true;
-            nixos-kernels.package = nixos-kernels.packages.${pkgs.stdenv.hostPlatform.system}.linux_7_1;
+            nixos-surface-kernel.enable = true;
+            nixos-surface-kernel.package = nixos-surface-kernel.packages.${pkgs.stdenv.hostPlatform.system}.linux-surface_7_3;
           })
         ];
       };
