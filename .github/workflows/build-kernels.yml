@@ -63,17 +63,21 @@ jobs:
           declare -a FINAL_TARGETS
 
           for target in "${TARGETS[@]}"; do
-            store_path="$(nix eval --json "$target" | jq -er . | sed 's/\//%2F/g')"
+            store_path="$(nix eval --json "$target" | jq -er .)"
+            narinfo="${${store_path//*\//}//-*/}.narinfo"
+            encoded_store_path="$(echo "${store_path}" | sed 's/\//%2F/g')"
             cachix_resp="$(curl -fsSL \
               -H "Accept: application/json" \
               -H "Authorization: Bearer $CACHIX_AUTH_TOKEN" \
-              "https://cachix.org/api/v1/cache/${CACHIX_REPO_NAME}/search/${store_path}")"
+              "https://cachix.org/api/v1/cache/${CACHIX_REPO_NAME}/search/${encoded_store_path}")"
             exists="$(echo "$cachix_resp" | jq -r '(. | length) > 0')"
             if [[ "$exists" == "true" ]]; then
               echo "Skipping build of already-cached $target"
               echo "$store_path is already in cache"
             else
-              FINAL_TARGETS=("${FINAL_TARGETS[@]}" "$target")
+              if ! curl -fsSL "https://cache.nixos.org/${narinfo}" >/dev/null; then
+                FINAL_TARGETS=("${FINAL_TARGETS[@]}" "$target")
+              fi
             fi
           done
 
