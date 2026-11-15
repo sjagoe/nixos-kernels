@@ -6,6 +6,10 @@ on:
   push:
     branches: [main]
 
+env:
+  CACHIX_REPO_NAME: nixos-surface-kernel
+  CACHIX_PUBLIC_KEY: nixos-surface-kernel.cachix.org-1:0NRj1XcsGihDlexYdGuRHrxP+yX8o15HUTvk4m6yGVk=
+
 jobs:
   matrix:
     name: Generate matrix
@@ -45,7 +49,7 @@ jobs:
 
       - uses: cachix/cachix-action@v17
         with:
-          name: nixos-kernels
+          name: ${{ env.CACHIX_REPO_NAME }}
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
       - name: Filter build targets
@@ -63,7 +67,7 @@ jobs:
             cachix_resp="$(curl -fsSL \
               -H "Accept: application/json" \
               -H "Authorization: Bearer $CACHIX_AUTH_TOKEN" \
-              "https://cachix.org/api/v1/cache/nixos-kernels/search/${store_path}")"
+              "https://cachix.org/api/v1/cache/${CACHIX_REPO_NAME}/search/${store_path}")"
             exists="$(echo "$cachix_resp" | jq -r '(. | length) > 0')"
             if [[ "$exists" == "true" ]]; then
               echo "Skipping build of already-cached $target"
@@ -105,8 +109,8 @@ jobs:
             --no-link
             --print-out-paths
             --print-build-logs
-            --option extra-substituters "https://nixos-kernels.cachix.org"
-            --option extra-trusted-public-keys "nixos-kernels.cachix.org-1:RIMUFtH7hjB2skf7CYu5yy+4zsd3uEVsR+2OprRtKdQ="
+            --option extra-substituters "https://${CACHIX_REPO_NAME}.cachix.org"
+            --option extra-trusted-public-keys "${CACHIX_PUBLIC_KEY}"
           )
           mapfile -t FINAL_TARGETS <<< "$TARGETS"
           echo "Building targets ${FINAL_TARGETS[*]}"
