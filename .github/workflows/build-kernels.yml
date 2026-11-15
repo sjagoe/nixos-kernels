@@ -56,7 +56,7 @@ jobs:
         id: filter-builds
         env:
           BUILD: ${{ matrix.build }}
-          CACHIX_AUTH_TOKEN: '${{ secrets.CACHIX_METADATA_TOKEN_1 }}'
+          CACHIX_REPO_URL: https://${{ env.CACHIX_REPO_NAME }}.cachix.org
         run: |
           BUILD_TARGETS="$(nix eval --json "${BUILD}.outputs" | jq -er --arg target "$BUILD" 'foreach .[] as $output (null; "\($target).\($output)")')"
           mapfile -t TARGETS <<< "$BUILD_TARGETS"
@@ -64,20 +64,16 @@ jobs:
 
           for target in "${TARGETS[@]}"; do
             store_path="$(nix eval --json "$target" | jq -er .)"
-            narinfo="${${store_path//*\//}//-*/}.narinfo"
-            encoded_store_path="$(echo "${store_path}" | sed 's/\//%2F/g')"
-            cachix_resp="$(curl -fsSL \
-              -H "Accept: application/json" \
-              -H "Authorization: Bearer $CACHIX_AUTH_TOKEN" \
-              "https://cachix.org/api/v1/cache/${CACHIX_REPO_NAME}/search/${encoded_store_path}")"
-            exists="$(echo "$cachix_resp" | jq -r '(. | length) > 0')"
-            if [[ "$exists" == "true" ]]; then
+            store_filename="${store_path//*\//}"
+            narinfo="${store_filename//-*/}.narinfo"
+            if curl -fsSL "https://${CACHIX_REPO_URL}/${narinfo}" >/dev/null; then
               echo "Skipping build of already-cached $target"
               echo "$store_path is already in cache"
+            elif curl -fsSL "https://cache.nixos.org/${narinfo}" >/dev/null; then
+              echo "Skipping build of upstream-cached $target"
+              echo "$store_path exists in cache.nixos.org"
             else
-              if ! curl -fsSL "https://cache.nixos.org/${narinfo}" >/dev/null; then
-                FINAL_TARGETS=("${FINAL_TARGETS[@]}" "$target")
-              fi
+              FINAL_TARGETS=("${FINAL_TARGETS[@]}" "$target")
             fi
           done
 
