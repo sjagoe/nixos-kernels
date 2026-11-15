@@ -1,5 +1,5 @@
 let
-  overrideKernel = pkgs: version: hash:
+  maybeOverrideKernel = pkgs: version: hash:
     let
       inherit (pkgs) lib;
 
@@ -7,18 +7,7 @@ let
       minor = lib.versions.minor version;
       release = lib.versions.majorMinor version;
 
-      kernelFor = version:
-        let
-          standardName = "linux_${major}_${minor}";
-          hasKernel = pkgs ? "${standardName}";
-          testingVersion = lib.versions.majorMinor pkgs.linux_testing.version;
-          isTesting = release == testingVersion;
-        in
-          if (hasKernel) then pkgs.${standardName} else
-            if (isTesting) then pkgs.linux_testing else
-              throw "Linux ${release} is not available to override from nixpkgs";
-    in
-      (kernelFor version).override {
+      overrideKernel = kernelPkg: kernelPkg.override {
         argsOverride = {
           src = pkgs.fetchurl {
             url = "mirror://kernel/linux/kernel/v${major}.x/linux-${version}.tar.xz";
@@ -28,6 +17,19 @@ let
           modDirVersion = lib.versions.pad 3 version;
         };
       };
+
+      kernelFor = version:
+        let
+          standardName = "linux_${major}_${minor}";
+          hasKernel = pkgs ? "${standardName}";
+          testingVersion = lib.versions.majorMinor pkgs.linux_testing.version;
+          isTesting = release == testingVersion;
+        in
+          if (hasKernel) then pkgs.${standardName} else
+            if (isTesting) then (overrideKernel pkgs.linux_testing) else
+              throw "Linux ${release} is not available to override from nixpkgs";
+    in
+      kernelFor version;
 in
 {
   generatePackages = system: hashes: pkgs:
@@ -38,7 +40,7 @@ in
       hash = version: hashes."${version}";
       kernelsByVersion = builtins.listToAttrs
         (builtins.map
-          (version: { name = version; value = overrideKernel pkgs version (hash version); })
+          (version: { name = version; value = maybeOverrideKernel pkgs version (hash version); })
           versions);
     in
       (lib.mapAttrs'
