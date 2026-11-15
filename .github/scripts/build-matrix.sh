@@ -11,7 +11,7 @@ valid_builds='[]'
 
 CACHES=(
     cache.nixos.org
-    nixos-kernels.cachix.org
+    nixos-surface-kernel.cachix.org
 )
 
 exists_in_cache() {
