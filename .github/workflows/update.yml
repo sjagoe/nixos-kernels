@@ -119,6 +119,10 @@ jobs:
         run: |
           nix flake update
 
+      - name: Update README
+        run: |
+          bash .github/scripts/generate-readme.sh 2>/dev/null > README.md
+
       - name: Push and create PR
         shell: bash
         env:
@@ -129,6 +133,7 @@ jobs:
           DESCRIPTION: ""
           FILES_LIST: |
             flake.lock
+            README.md
           CREATE_PR_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           mapfile -t FILES < <(echo "$FILES_LIST" | grep -v '^$')
