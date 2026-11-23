@@ -1,7 +1,7 @@
 {
   "hashes": {
-    "6.18.64": "sha256-Ag1FUQxTmXLm8UxccVZoeNO371b7CCs+CRNPLrqt5WI=",
-    "7.3.5": "sha256-jyk/g9VPC3ub5Whj68Xk6nnXPlMLSuVcVyvpfvOfCZA="
+    "6.18.65": "sha256-ySYG+VbwncULWg4q+ehnY/zietoWR96X+NGsjPyVgB0=",
+    "7.3.6": "sha256-gYPUdadqD6/6ktbNUAr0IfWJ39AwCg8QYLuHXhHUVyM="
   },
   "versions": [
     "6.18",
